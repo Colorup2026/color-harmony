@@ -1,5 +1,5 @@
 const beforeColors = ["#808080", "#4A4A4A", "#696969", "#9E9E9E"];
-const afterColors = ["#D4A574", "#C9956B", "#E8C5A0", "#B8845A"];
+const afterColors = ["#CDB4DB", "#FFC8DD", "#FFAFCC", "#A2D2FF"];
 
 const WhyItMatters = () => {
   return (
@@ -9,24 +9,22 @@ const WhyItMatters = () => {
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <p className="text-muted-foreground font-body text-sm tracking-widest uppercase mb-3">
-            The Power of Color
+            El Poder del Color
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-semibold text-foreground mb-6">
-            Why It Matters
+            Por Qué Importa
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Wearing the right colors can completely transform how you look and
-            feel. The difference between looking washed out and radiant is often
-            just a shade away.
+            Usar los colores correctos puede transformar completamente cómo te
+            ves y cómo te sientes. La diferencia entre verte apagado/a y
+            radiante está a solo un tono de distancia.
           </p>
         </div>
 
-        {/* Before / After concept */}
         <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-          {/* Before */}
           <div className="rounded-2xl p-8 bg-background shadow-soft text-center">
             <p className="text-muted-foreground text-xs tracking-widest uppercase mb-6">
-              Wrong Colors
+              Colores Incorrectos
             </p>
             <div className="flex gap-3 justify-center mb-6">
               {beforeColors.map((color, i) => (
@@ -38,14 +36,13 @@ const WhyItMatters = () => {
               ))}
             </div>
             <p className="text-muted-foreground text-sm">
-              Dull, washed out, invisible
+              Apagado, sin vida, invisible
             </p>
           </div>
 
-          {/* After */}
           <div className="rounded-2xl p-8 bg-gradient-card shadow-medium text-center ring-2 ring-warm-peach/30">
             <p className="text-foreground text-xs tracking-widest uppercase mb-6 font-medium">
-              Your Perfect Colors ✨
+              Tus Colores Perfectos ✨
             </p>
             <div className="flex gap-3 justify-center mb-6">
               {afterColors.map((color, i) => (
@@ -57,7 +54,7 @@ const WhyItMatters = () => {
               ))}
             </div>
             <p className="text-foreground text-sm font-medium">
-              Vibrant, radiant, confident
+              Vibrante, radiante, con confianza
             </p>
           </div>
         </div>

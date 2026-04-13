@@ -5,7 +5,7 @@ const Footer = () => (
         COLOR<span className="text-gradient-warm"> UP</span>
       </p>
       <p className="text-muted-foreground text-sm">
-        Discover the colors that make you shine.
+        Descubre los colores que te hacen brillar.
       </p>
     </div>
   </footer>

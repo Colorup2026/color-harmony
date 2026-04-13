@@ -13,16 +13,16 @@ const CTASection = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold text-foreground mb-4">
-            Ready to Find Your Colors?
+            ¿Lista Para Encontrar Tus Colores?
           </h2>
           <p className="text-muted-foreground text-lg mb-10">
-            It only takes 2 minutes. Discover the palette that was made for you.
+            Solo toma 2 minutos. Descubre la paleta que fue hecha para ti.
           </p>
           <button
             onClick={() => navigate("/questionnaire")}
             className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-gradient-warm text-foreground font-medium text-lg shadow-medium hover:shadow-glow transition-all duration-300 hover:scale-105 active:scale-[0.98]"
           >
-            Start Now
+            Comenzar Ahora
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>

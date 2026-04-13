@@ -13,30 +13,30 @@ interface FormData {
 }
 
 const skinTones = [
-  { id: "fair", label: "Fair", color: "#FDEBD0" },
-  { id: "light", label: "Light", color: "#F5CBA7" },
-  { id: "medium", label: "Medium", color: "#D4A574" },
-  { id: "olive", label: "Olive", color: "#C4A77D" },
-  { id: "tan", label: "Tan", color: "#A0785A" },
-  { id: "dark", label: "Dark", color: "#6F4E37" },
+  { id: "fair", label: "Clara", color: "#FDEBD0" },
+  { id: "light", label: "Ligera", color: "#F5CBA7" },
+  { id: "medium", label: "Media", color: "#D4A574" },
+  { id: "olive", label: "Oliva", color: "#C4A77D" },
+  { id: "tan", label: "Morena", color: "#A0785A" },
+  { id: "dark", label: "Oscura", color: "#6F4E37" },
 ];
 
 const hairColors = [
-  { id: "blonde", label: "Blonde", color: "#E8D5A3" },
-  { id: "light-brown", label: "Light Brown", color: "#A0785A" },
-  { id: "dark-brown", label: "Dark Brown", color: "#5C4033" },
-  { id: "black", label: "Black", color: "#2C2C2C" },
-  { id: "red", label: "Red", color: "#A0522D" },
-  { id: "grey", label: "Grey/White", color: "#C0C0C0" },
+  { id: "blonde", label: "Rubio", color: "#E8D5A3" },
+  { id: "light-brown", label: "Castaño Claro", color: "#A0785A" },
+  { id: "dark-brown", label: "Castaño Oscuro", color: "#5C4033" },
+  { id: "black", label: "Negro", color: "#2C2C2C" },
+  { id: "red", label: "Pelirrojo", color: "#A0522D" },
+  { id: "grey", label: "Gris/Blanco", color: "#C0C0C0" },
 ];
 
 const eyeColors = [
-  { id: "blue", label: "Blue", color: "#6CA0DC" },
-  { id: "green", label: "Green", color: "#7BA17C" },
-  { id: "hazel", label: "Hazel", color: "#8E7618" },
-  { id: "brown", label: "Brown", color: "#6B4226" },
-  { id: "dark-brown", label: "Dark Brown", color: "#3B2F2F" },
-  { id: "grey", label: "Grey", color: "#A8B5C2" },
+  { id: "blue", label: "Azul", color: "#6CA0DC" },
+  { id: "green", label: "Verde", color: "#7BA17C" },
+  { id: "hazel", label: "Avellana", color: "#8E7618" },
+  { id: "brown", label: "Marrón", color: "#6B4226" },
+  { id: "dark-brown", label: "Marrón Oscuro", color: "#3B2F2F" },
+  { id: "grey", label: "Gris", color: "#A8B5C2" },
 ];
 
 const totalSteps = 5;
@@ -58,7 +58,7 @@ const Questionnaire = () => {
   const canNext = useCallback(() => {
     switch (step) {
       case 0: return formData.name.trim() !== "" && formData.email.trim() !== "";
-      case 1: return true; // photo is optional
+      case 1: return true;
       case 2: return formData.skinTone !== "";
       case 3: return formData.hairColor !== "";
       case 4: return formData.eyeColor !== "";
@@ -68,10 +68,7 @@ const Questionnaire = () => {
 
   const handleNext = () => {
     if (step < totalSteps - 1) setStep(step + 1);
-    else {
-      // Navigate to results with data
-      navigate("/results", { state: formData });
-    }
+    else navigate("/results", { state: formData });
   };
 
   const handleBack = () => {
@@ -124,22 +121,22 @@ const Questionnaire = () => {
         return (
           <div className="space-y-6 max-w-sm mx-auto animate-fade-in-up">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Your Name</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Tu Nombre</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter your name"
+                placeholder="Escribe tu nombre"
                 className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-peach transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="your@email.com"
+                placeholder="tu@correo.com"
                 className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-peach transition-all"
               />
             </div>
@@ -159,14 +156,14 @@ const Questionnaire = () => {
                 {formData.photo ? (
                   <img
                     src={formData.photo}
-                    alt="Your photo"
+                    alt="Tu foto"
                     className="w-full h-full object-cover rounded-2xl"
                   />
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">Upload a selfie</span>
-                    <span className="text-xs text-muted-foreground mt-1">(Optional)</span>
+                    <span className="text-sm text-muted-foreground">Sube un selfie</span>
+                    <span className="text-xs text-muted-foreground mt-1">(Opcional)</span>
                   </>
                 )}
               </div>
@@ -177,7 +174,7 @@ const Questionnaire = () => {
                 onClick={() => setFormData({ ...formData, photo: null })}
                 className="mt-4 text-sm text-muted-foreground underline"
               >
-                Remove photo
+                Eliminar foto
               </button>
             )}
           </div>
@@ -216,18 +213,17 @@ const Questionnaire = () => {
   };
 
   const stepTitles = [
-    "Let's get to know you",
-    "Upload a photo",
-    "What's your skin tone?",
-    "What's your hair color?",
-    "What's your eye color?",
+    "Vamos a conocerte",
+    "Sube una foto",
+    "¿Cuál es tu tono de piel?",
+    "¿Cuál es tu color de cabello?",
+    "¿Cuál es tu color de ojos?",
   ];
 
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
       <div className="pt-16 min-h-screen flex flex-col">
-        {/* Progress bar */}
         <div className="w-full h-1 bg-muted">
           <div
             className="h-full bg-gradient-warm transition-all duration-500 ease-out"
@@ -236,32 +232,29 @@ const Questionnaire = () => {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          {/* Step title */}
           <p className="text-muted-foreground text-sm mb-2 font-body">
-            Step {step + 1} of {totalSteps}
+            Paso {step + 1} de {totalSteps}
           </p>
           <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground mb-10 text-center">
             {stepTitles[step]}
           </h2>
 
-          {/* Step content */}
           {renderStep()}
 
-          {/* Navigation */}
           <div className="flex items-center gap-4 mt-12">
             <button
               onClick={handleBack}
               className="flex items-center gap-2 px-6 py-3 rounded-full text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Atrás
             </button>
             <button
               onClick={handleNext}
               disabled={!canNext()}
               className="flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-warm text-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
-              {step === totalSteps - 1 ? "See My Colors" : "Next"}
+              {step === totalSteps - 1 ? "Ver Mis Colores" : "Siguiente"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

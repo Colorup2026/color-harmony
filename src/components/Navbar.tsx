@@ -13,7 +13,7 @@ const Navbar = () => {
           onClick={() => navigate("/questionnaire")}
           className="px-5 py-2 rounded-full bg-gradient-warm text-foreground text-sm font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105"
         >
-          Get Started
+          Comenzar
         </button>
       </div>
     </nav>
