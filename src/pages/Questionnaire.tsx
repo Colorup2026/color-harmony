@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, Sparkles } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -10,36 +10,66 @@ interface FormData {
   skinTone: string;
   hairColor: string;
   eyeColor: string;
+  gender: string;
+  style: string;
+  contrast: string;
 }
 
 const skinTones = [
-  { id: "fair", label: "Clara", color: "#FDEBD0" },
-  { id: "light", label: "Ligera", color: "#F5CBA7" },
+  { id: "fair", label: "Muy Clara", color: "#FDEBD0" },
+  { id: "light", label: "Clara", color: "#F5CBA7" },
   { id: "medium", label: "Media", color: "#D4A574" },
   { id: "olive", label: "Oliva", color: "#C4A77D" },
+  { id: "golden", label: "Dorada", color: "#B8860B" },
   { id: "tan", label: "Morena", color: "#A0785A" },
   { id: "dark", label: "Oscura", color: "#6F4E37" },
+  { id: "porcelain", label: "Porcelana", color: "#FFF5EE" },
 ];
 
 const hairColors = [
   { id: "blonde", label: "Rubio", color: "#E8D5A3" },
+  { id: "strawberry", label: "Rubio Fresa", color: "#C78C6C" },
   { id: "light-brown", label: "Castaño Claro", color: "#A0785A" },
   { id: "dark-brown", label: "Castaño Oscuro", color: "#5C4033" },
   { id: "black", label: "Negro", color: "#2C2C2C" },
   { id: "red", label: "Pelirrojo", color: "#A0522D" },
-  { id: "grey", label: "Gris/Blanco", color: "#C0C0C0" },
+  { id: "ash-brown", label: "Castaño Ceniza", color: "#8B7D6B" },
+  { id: "grey", label: "Gris / Blanco", color: "#C0C0C0" },
 ];
 
 const eyeColors = [
   { id: "blue", label: "Azul", color: "#6CA0DC" },
   { id: "green", label: "Verde", color: "#7BA17C" },
   { id: "hazel", label: "Avellana", color: "#8E7618" },
+  { id: "amber", label: "Ámbar", color: "#FFBF00" },
+  { id: "honey", label: "Miel", color: "#B8860B" },
   { id: "brown", label: "Marrón", color: "#6B4226" },
   { id: "dark-brown", label: "Marrón Oscuro", color: "#3B2F2F" },
   { id: "grey", label: "Gris", color: "#A8B5C2" },
 ];
 
-const totalSteps = 5;
+const genderOptions = [
+  { id: "mujer", label: "Mujer", emoji: "👩" },
+  { id: "hombre", label: "Hombre", emoji: "👨" },
+  { id: "neutro", label: "Sin preferencia", emoji: "✨" },
+];
+
+const styleOptions = [
+  { id: "casual", label: "Casual", emoji: "👕", desc: "Cómodo y relajado" },
+  { id: "elegante", label: "Elegante", emoji: "👔", desc: "Sofisticado y pulido" },
+  { id: "streetwear", label: "Streetwear", emoji: "🧢", desc: "Urbano y moderno" },
+  { id: "clasico", label: "Clásico", emoji: "🎩", desc: "Atemporal y refinado" },
+  { id: "minimalista", label: "Minimalista", emoji: "◻️", desc: "Limpio y esencial" },
+  { id: "bohemio", label: "Bohemio", emoji: "🌿", desc: "Libre y artístico" },
+];
+
+const contrastOptions = [
+  { id: "low", label: "Bajo", desc: "Piel, cabello y ojos de tonos similares", visual: "🌫️" },
+  { id: "medium", label: "Medio", desc: "Diferencia moderada entre rasgos", visual: "🌤️" },
+  { id: "high", label: "Alto", desc: "Gran contraste entre piel, cabello y ojos", visual: "🌗" },
+];
+
+const totalSteps = 8;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
@@ -51,6 +81,9 @@ const Questionnaire = () => {
     skinTone: "",
     hairColor: "",
     eyeColor: "",
+    gender: "",
+    style: "",
+    contrast: "",
   });
 
   const progress = ((step + 1) / totalSteps) * 100;
@@ -58,10 +91,13 @@ const Questionnaire = () => {
   const canNext = useCallback(() => {
     switch (step) {
       case 0: return formData.name.trim() !== "" && formData.email.trim() !== "";
-      case 1: return true;
-      case 2: return formData.skinTone !== "";
-      case 3: return formData.hairColor !== "";
-      case 4: return formData.eyeColor !== "";
+      case 1: return formData.gender !== "";
+      case 2: return formData.style !== "";
+      case 3: return true; // photo optional
+      case 4: return formData.skinTone !== "";
+      case 5: return formData.hairColor !== "";
+      case 6: return formData.eyeColor !== "";
+      case 7: return formData.contrast !== "";
       default: return false;
     }
   }, [step, formData]);
@@ -85,7 +121,7 @@ const Questionnaire = () => {
     }
   };
 
-  const OptionGrid = ({
+  const ColorOptionGrid = ({
     items,
     selected,
     onSelect,
@@ -94,22 +130,22 @@ const Questionnaire = () => {
     selected: string;
     onSelect: (id: string) => void;
   }) => (
-    <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+    <div className="grid grid-cols-4 gap-3 max-w-md mx-auto">
       {items.map((item) => (
         <button
           key={item.id}
           onClick={() => onSelect(item.id)}
-          className={`flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300 ${
+          className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-300 ${
             selected === item.id
-              ? "shadow-medium scale-105 ring-2 ring-warm-peach"
+              ? "shadow-medium scale-105 ring-2 ring-accent"
               : "shadow-soft hover:shadow-medium hover:scale-[1.02]"
           } bg-background`}
         >
           <div
-            className="w-14 h-14 rounded-full shadow-sm"
+            className="w-12 h-12 rounded-full shadow-sm border border-border"
             style={{ backgroundColor: item.color }}
           />
-          <span className="text-xs font-medium text-foreground">{item.label}</span>
+          <span className="text-[11px] font-medium text-foreground leading-tight text-center">{item.label}</span>
         </button>
       ))}
     </div>
@@ -127,7 +163,7 @@ const Questionnaire = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Escribe tu nombre"
-                className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-peach transition-all"
+                className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
             </div>
             <div>
@@ -137,28 +173,61 @@ const Questionnaire = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="tu@correo.com"
-                className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-warm-peach transition-all"
+                className="w-full px-5 py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-all"
               />
             </div>
           </div>
         );
       case 1:
         return (
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto animate-fade-in-up">
+            {genderOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, gender: opt.id })}
+                className={`flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 ${
+                  formData.gender === opt.id
+                    ? "shadow-medium scale-105 ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium hover:scale-[1.02]"
+                } bg-background`}
+              >
+                <span className="text-4xl">{opt.emoji}</span>
+                <span className="text-sm font-medium text-foreground">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        );
+      case 2:
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg mx-auto animate-fade-in-up">
+            {styleOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, style: opt.id })}
+                className={`flex flex-col items-center gap-2 p-5 rounded-2xl transition-all duration-300 ${
+                  formData.style === opt.id
+                    ? "shadow-medium scale-105 ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium hover:scale-[1.02]"
+                } bg-background`}
+              >
+                <span className="text-3xl">{opt.emoji}</span>
+                <span className="text-sm font-semibold text-foreground">{opt.label}</span>
+                <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
+              </button>
+            ))}
+          </div>
+        );
+      case 3:
+        return (
           <div className="max-w-sm mx-auto text-center animate-fade-in-up">
             <label className="block cursor-pointer">
               <div
                 className={`w-48 h-48 mx-auto rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 ${
-                  formData.photo
-                    ? "border-warm-peach"
-                    : "border-border hover:border-warm-peach/50"
+                  formData.photo ? "border-accent" : "border-border hover:border-accent/50"
                 }`}
               >
                 {formData.photo ? (
-                  <img
-                    src={formData.photo}
-                    alt="Tu foto"
-                    className="w-full h-full object-cover rounded-2xl"
-                  />
+                  <img src={formData.photo} alt="Tu foto" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <>
                     <Upload className="w-8 h-8 text-muted-foreground mb-2" />
@@ -169,44 +238,40 @@ const Questionnaire = () => {
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
+            <p className="text-xs text-muted-foreground mt-4">Tu foto nos ayuda a afinar la recomendación. No es obligatoria.</p>
             {formData.photo && (
-              <button
-                onClick={() => setFormData({ ...formData, photo: null })}
-                className="mt-4 text-sm text-muted-foreground underline"
-              >
+              <button onClick={() => setFormData({ ...formData, photo: null })} className="mt-3 text-sm text-muted-foreground underline">
                 Eliminar foto
               </button>
             )}
           </div>
         );
-      case 2:
-        return (
-          <div className="animate-fade-in-up">
-            <OptionGrid
-              items={skinTones}
-              selected={formData.skinTone}
-              onSelect={(id) => setFormData({ ...formData, skinTone: id })}
-            />
-          </div>
-        );
-      case 3:
-        return (
-          <div className="animate-fade-in-up">
-            <OptionGrid
-              items={hairColors}
-              selected={formData.hairColor}
-              onSelect={(id) => setFormData({ ...formData, hairColor: id })}
-            />
-          </div>
-        );
       case 4:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={skinTones} selected={formData.skinTone} onSelect={(id) => setFormData({ ...formData, skinTone: id })} /></div>;
+      case 5:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
+      case 6:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={eyeColors} selected={formData.eyeColor} onSelect={(id) => setFormData({ ...formData, eyeColor: id })} /></div>;
+      case 7:
         return (
-          <div className="animate-fade-in-up">
-            <OptionGrid
-              items={eyeColors}
-              selected={formData.eyeColor}
-              onSelect={(id) => setFormData({ ...formData, eyeColor: id })}
-            />
+          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
+            {contrastOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, contrast: opt.id })}
+                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
+                  formData.contrast === opt.id
+                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium"
+                } bg-background`}
+              >
+                <span className="text-3xl">{opt.visual}</span>
+                <div>
+                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                </div>
+              </button>
+            ))}
           </div>
         );
     }
@@ -214,34 +279,46 @@ const Questionnaire = () => {
 
   const stepTitles = [
     "Vamos a conocerte",
-    "Sube una foto",
+    "¿Cómo te identificas?",
+    "¿Cuál es tu estilo?",
+    "Sube una foto tuya",
     "¿Cuál es tu tono de piel?",
     "¿Cuál es tu color de cabello?",
     "¿Cuál es tu color de ojos?",
+    "¿Cuál es tu nivel de contraste?",
+  ];
+
+  const stepSubtitles = [
+    "Cuéntanos un poco sobre ti",
+    "Esto nos ayuda a personalizar tus recomendaciones",
+    "Define tu estilo para recomendaciones más precisas",
+    "Una foto nos ayuda a afinar tu análisis cromático",
+    "Selecciona el que más se parezca al tuyo",
+    "Elige el color más cercano al tuyo natural",
+    "Selecciona tu color de ojos natural",
+    "Compara la diferencia entre tu piel, cabello y ojos",
   ];
 
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
       <div className="pt-16 min-h-screen flex flex-col">
-        <div className="w-full h-1 bg-muted">
-          <div
-            className="h-full bg-gradient-warm transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="w-full h-1.5 bg-muted">
+          <div className="h-full bg-gradient-warm transition-all duration-500 ease-out rounded-r-full" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <p className="text-muted-foreground text-sm mb-2 font-body">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
+          <p className="text-muted-foreground text-sm mb-1 font-body">
             Paso {step + 1} de {totalSteps}
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground mb-10 text-center">
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground mb-2 text-center">
             {stepTitles[step]}
           </h2>
+          <p className="text-muted-foreground text-sm mb-8 text-center max-w-md">{stepSubtitles[step]}</p>
 
           {renderStep()}
 
-          <div className="flex items-center gap-4 mt-12">
+          <div className="flex items-center gap-4 mt-10">
             <button
               onClick={handleBack}
               className="flex items-center gap-2 px-6 py-3 rounded-full text-muted-foreground hover:text-foreground transition-colors"
@@ -254,8 +331,17 @@ const Questionnaire = () => {
               disabled={!canNext()}
               className="flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-warm text-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
-              {step === totalSteps - 1 ? "Ver Mis Colores" : "Siguiente"}
-              <ArrowRight className="w-4 h-4" />
+              {step === totalSteps - 1 ? (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Analizar Mis Colores
+                </>
+              ) : (
+                <>
+                  Siguiente
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </div>

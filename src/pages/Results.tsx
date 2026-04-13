@@ -1,82 +1,18 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Sparkles, Share2, Mail } from "lucide-react";
-
-const generatePalette = (skinTone: string, hairColor: string, eyeColor: string) => {
-  const palettes: Record<string, { colors: { hex: string; name: string }[]; season: string; description: string }> = {
-    warm: {
-      season: "Otoño Cálido",
-      description: "Tus tonos cálidos y rasgos ricos se complementan perfectamente con tonos terrosos y dorados. Piensa en colores de atardecer y calidez especiada.",
-      colors: [
-        { hex: "#CDB4DB", name: "Lavanda Suave" },
-        { hex: "#FFC8DD", name: "Rosa Algodón" },
-        { hex: "#D4A574", name: "Arena Dorada" },
-        { hex: "#FFAFCC", name: "Rosa Intenso" },
-        { hex: "#E8C5A0", name: "Miel Suave" },
-        { hex: "#BDE0FE", name: "Azul Cielo" },
-        { hex: "#A2D2FF", name: "Azul Sereno" },
-        { hex: "#F5DEB3", name: "Trigo" },
-      ],
-    },
-    cool: {
-      season: "Verano Fresco",
-      description: "Tus tonos fríos brillan más con tonos suaves y apagados. Rosas empolvados, grises frescos y lavandas suaves resaltan tu brillo natural.",
-      colors: [
-        { hex: "#CDB4DB", name: "Lavanda Suave" },
-        { hex: "#BDE0FE", name: "Azul Cielo" },
-        { hex: "#A2D2FF", name: "Azul Sereno" },
-        { hex: "#FFC8DD", name: "Rosa Algodón" },
-        { hex: "#7BA17C", name: "Verde Salvia" },
-        { hex: "#FFAFCC", name: "Rosa Intenso" },
-        { hex: "#C4B7A6", name: "Greige" },
-        { hex: "#9B8CA0", name: "Ciruela Suave" },
-      ],
-    },
-    neutral: {
-      season: "Natural Suave",
-      description: "Tus rasgos equilibrados funcionan maravillosamente con una paleta versátil. Neutros suaves y tonos tierra apagados te mantienen elegante sin esfuerzo.",
-      colors: [
-        { hex: "#CDB4DB", name: "Lavanda Suave" },
-        { hex: "#FFC8DD", name: "Rosa Algodón" },
-        { hex: "#FFAFCC", name: "Rosa Intenso" },
-        { hex: "#BDE0FE", name: "Azul Cielo" },
-        { hex: "#A2D2FF", name: "Azul Sereno" },
-        { hex: "#BC8F8F", name: "Marrón Rosado" },
-        { hex: "#7B8D6E", name: "Musgo" },
-        { hex: "#C9B89E", name: "Duna de Arena" },
-      ],
-    },
-  };
-
-  const warmSkins = ["tan", "medium", "olive"];
-  const coolSkins = ["fair", "light"];
-  const warmHair = ["blonde", "red", "light-brown"];
-  const coolHair = ["black", "grey"];
-
-  let warmScore = 0;
-  if (warmSkins.includes(skinTone)) warmScore++;
-  if (warmHair.includes(hairColor)) warmScore++;
-  if (["hazel", "brown"].includes(eyeColor)) warmScore++;
-  if (coolSkins.includes(skinTone)) warmScore--;
-  if (coolHair.includes(hairColor)) warmScore--;
-  if (["blue", "grey", "green"].includes(eyeColor)) warmScore--;
-
-  if (warmScore > 0) return palettes.warm;
-  if (warmScore < 0) return palettes.cool;
-  return palettes.neutral;
-};
-
-const outfitSuggestions = [
-  { label: "Casual", pieces: ["Camisa de lino", "Chinos", "Zapatillas"] },
-  { label: "Elegante", pieces: ["Blazer", "Cuello alto", "Pantalón sastre"] },
-  { label: "Fin de Semana", pieces: ["Suéter de punto", "Jeans", "Botas"] },
-];
+import ProfileSummary from "@/components/results/ProfileSummary";
+import ColorPalette from "@/components/results/ColorPalette";
+import ExplanationSection from "@/components/results/ExplanationSection";
+import ClothingSuggestions from "@/components/results/ClothingSuggestions";
+import DesigualSection from "@/components/results/DesigualSection";
+import { analyzeUser, type UserProfile } from "@/lib/colorAnalysis";
+import { Sparkles, Share2, Mail, ArrowRight } from "lucide-react";
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const formData = location.state as { name: string; email: string; skinTone: string; hairColor: string; eyeColor: string } | null;
+  const formData = location.state as UserProfile | null;
 
   if (!formData) {
     return (
@@ -96,103 +32,77 @@ const Results = () => {
     );
   }
 
-  const palette = generatePalette(formData.skinTone, formData.hairColor, formData.eyeColor);
+  const result = analyzeUser(formData);
 
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
       <main className="pt-16">
+        {/* Hero */}
         <section className="py-16 md:py-20 text-center px-6 relative overflow-hidden">
-          <div className="absolute top-10 left-1/4 w-64 h-64 rounded-full bg-warm-peach/15 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-warm-nude/20 blur-3xl" />
-
+          <div className="absolute top-10 left-1/4 w-64 h-64 rounded-full bg-secondary/15 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
           <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warm-peach/20 text-foreground text-sm mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-foreground text-sm mb-6">
               <Sparkles className="w-4 h-4" />
-              Tus resultados están listos
+              Tu análisis está listo
             </div>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground mb-4">
               {formData.name ? `${formData.name}, eres` : "Eres"}
             </h1>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-gradient-warm mb-6">
-              {palette.season}
+              {result.profile.season}
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed max-w-lg mx-auto">
-              {palette.description}
+              Un perfil <span className="capitalize">{result.profile.temperature}</span>, <span className="capitalize">{result.profile.intensity}</span> y <span className="capitalize">{result.profile.depth}</span> que define tu armonía cromática personal.
             </p>
           </div>
         </section>
 
-        <section className="pb-16 px-6">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-6 text-center">
-              Tu Paleta Personal
-            </h3>
-            <div className="grid grid-cols-4 gap-3 sm:gap-4">
-              {palette.colors.map((color, i) => (
-                <div
-                  key={i}
-                  className="group text-center animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.08}s` }}
-                >
-                  <div
-                    className="aspect-square rounded-2xl shadow-soft mb-2 transition-all duration-300 group-hover:shadow-medium group-hover:scale-105"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                  <p className="text-xs text-muted-foreground">{color.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <ProfileSummary
+          name={formData.name}
+          profile={result.profile}
+          gender={formData.gender}
+          style={formData.style}
+        />
 
-        <section className="py-16 px-6 bg-background">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-8 text-center">
-              Ideas de Outfits Para Ti
-            </h3>
-            <div className="grid sm:grid-cols-3 gap-4">
-              {outfitSuggestions.map((outfit) => (
-                <div
-                  key={outfit.label}
-                  className="p-6 rounded-2xl bg-gradient-card shadow-soft hover:shadow-medium transition-all duration-300"
-                >
-                  <h4 className="font-display text-lg font-semibold text-foreground mb-3">
-                    {outfit.label}
-                  </h4>
-                  <ul className="space-y-2">
-                    {outfit.pieces.map((piece) => (
-                      <li key={piece} className="text-muted-foreground text-sm flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-warm-peach" />
-                        {piece}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <ColorPalette title="Colores Que Te Favorecen" colors={result.recommendedColors} variant="recommended" />
 
+        <ColorPalette title="Colores a Usar con Moderación" colors={result.avoidColors} variant="avoid" />
+
+        <ExplanationSection explanation={result.explanation} tips={result.tips} />
+
+        <ClothingSuggestions profile={result.profile} style={formData.style} gender={formData.gender} />
+
+        <DesigualSection profile={result.profile} gender={formData.gender} style={formData.style} />
+
+        {/* CTA */}
         <section className="py-16 px-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-warm-cream/30" />
+          <div className="absolute inset-0 bg-secondary/10" />
           <div className="relative z-10 max-w-md mx-auto">
             <h3 className="font-display text-2xl font-semibold text-foreground mb-3">
               Obtén Tu Reporte Completo
             </h3>
             <p className="text-muted-foreground text-sm mb-8">
-              Te enviaremos tu análisis de color completo a tu correo.
+              Te enviaremos tu análisis cromático completo, tu paleta y las recomendaciones a tu correo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-gradient-warm text-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105">
                 <Mail className="w-4 h-4" />
                 Enviar Mis Resultados
               </button>
-              <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-warm-peach transition-all duration-300">
+              <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-accent transition-all duration-300">
                 <Share2 className="w-4 h-4" />
                 Compartir
               </button>
             </div>
+            <button
+              onClick={() => navigate("/questionnaire")}
+              className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Repetir el análisis
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         </section>
       </main>
