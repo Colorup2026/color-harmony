@@ -1,4 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProfileSummary from "@/components/results/ProfileSummary";
@@ -6,13 +8,63 @@ import ColorPalette from "@/components/results/ColorPalette";
 import ExplanationSection from "@/components/results/ExplanationSection";
 import ClothingSuggestions from "@/components/results/ClothingSuggestions";
 import DesigualSection from "@/components/results/DesigualSection";
-import { analyzeUser, type UserProfile } from "@/lib/colorAnalysis";
-import { Sparkles, Share2, Mail, ArrowRight } from "lucide-react";
+import AIInsights from "@/components/results/AIInsights";
+import { analyzeUser, type UserProfile, type AIPhotoAnalysis } from "@/lib/colorAnalysis";
+import { Sparkles, Share2, Mail, ArrowRight, Loader2 } from "lucide-react";
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const formData = location.state as UserProfile | null;
+  const [aiAnalysis, setAiAnalysis] = useState<AIPhotoAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [result, setResult] = useState(() => formData ? analyzeUser(formData) : null);
+
+  useEffect(() => {
+    if (!formData) return;
+
+    const runAIAnalysis = async () => {
+      setIsAnalyzing(true);
+      setAnalysisError(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("analyze-photo", {
+          body: {
+            photoBase64: formData.photo || null,
+            questionnaire: {
+              skinTone: formData.skinTone,
+              undertone: formData.undertone,
+              hairColor: formData.hairColor,
+              hairDepth: formData.hairDepth,
+              eyeColor: formData.eyeColor,
+              contrast: formData.contrast,
+              gender: formData.gender,
+              style: formData.style,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data && !data.error) {
+          setAiAnalysis(data as AIPhotoAnalysis);
+          setResult(analyzeUser(formData, data as AIPhotoAnalysis));
+        } else {
+          // Fallback to local analysis
+          console.warn("AI analysis returned error, using local:", data?.error);
+          setResult(analyzeUser(formData));
+        }
+      } catch (err) {
+        console.error("AI analysis failed:", err);
+        setAnalysisError("No pudimos completar el análisis con IA. Mostramos resultados basados en tus respuestas.");
+        setResult(analyzeUser(formData));
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+
+    runAIAnalysis();
+  }, []);
 
   if (!formData) {
     return (
@@ -32,7 +84,33 @@ const Results = () => {
     );
   }
 
-  const result = analyzeUser(formData);
+  if (isAnalyzing || !result) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <Navbar />
+        <div className="text-center pt-16">
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 rounded-full bg-gradient-warm animate-pulse-soft" />
+            <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-accent animate-spin" />
+            </div>
+          </div>
+          <h2 className="font-display text-2xl font-semibold text-foreground mb-3">Analizando tu perfil...</h2>
+          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+            {formData.photo 
+              ? "Nuestra IA está estudiando tu foto y comparándola con tus respuestas para darte el resultado más preciso."
+              : "Estamos procesando tus respuestas para crear tu perfil cromático personalizado."
+            }
+          </p>
+          <div className="flex justify-center gap-1 mt-6">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-2 h-2 rounded-full bg-accent animate-pulse-soft" style={{ animationDelay: `${i * 0.3}s` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -45,7 +123,7 @@ const Results = () => {
           <div className="relative z-10 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-foreground text-sm mb-6">
               <Sparkles className="w-4 h-4" />
-              Tu análisis está listo
+              {result.confidence >= 75 ? "Análisis con IA completado" : "Tu análisis está listo"}
             </div>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground mb-4">
               {formData.name ? `${formData.name}, eres` : "Eres"}
@@ -56,6 +134,17 @@ const Results = () => {
             <p className="text-muted-foreground text-lg leading-relaxed max-w-lg mx-auto">
               Un perfil <span className="capitalize">{result.profile.temperature}</span>, <span className="capitalize">{result.profile.intensity}</span> y <span className="capitalize">{result.profile.depth}</span> que define tu armonía cromática personal.
             </p>
+            {result.confidence >= 75 && (
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-background shadow-soft text-xs text-muted-foreground">
+                <div className="w-2 h-2 rounded-full bg-green-400" />
+                Confianza del análisis: {result.confidence}%
+              </div>
+            )}
+            {analysisError && (
+              <p className="mt-4 text-xs text-muted-foreground bg-background/80 px-4 py-2 rounded-xl inline-block">
+                {analysisError}
+              </p>
+            )}
           </div>
         </section>
 
@@ -65,6 +154,8 @@ const Results = () => {
           gender={formData.gender}
           style={formData.style}
         />
+
+        {aiAnalysis && <AIInsights aiAnalysis={aiAnalysis} />}
 
         <ColorPalette title="Colores Que Te Favorecen" colors={result.recommendedColors} variant="recommended" />
 
