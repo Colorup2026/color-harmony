@@ -6,7 +6,9 @@ export interface UserProfile {
   email: string;
   photo: string | null;
   skinTone: string;
+  undertone: string;
   hairColor: string;
+  hairDepth: string;
   eyeColor: string;
   gender: string;
   style: string;
@@ -26,16 +28,42 @@ export interface ColorRecommendation {
   name: string;
 }
 
+export interface AIPhotoAnalysis {
+  photoAnalysis: {
+    detectedSkinTone: string;
+    detectedUndertone: "cálido" | "frío" | "neutro";
+    detectedHairColor: string;
+    detectedHairDepth: "claro" | "medio" | "oscuro";
+    detectedEyeColor: string;
+    detectedContrast: "bajo" | "medio" | "alto";
+    overallIntensity: "suave" | "intenso";
+    confidence: number;
+  };
+  crossValidation: {
+    skinToneMatch: boolean;
+    hairColorMatch: boolean;
+    eyeColorMatch: boolean;
+    contrastMatch: boolean;
+    overallAgreement: "alta" | "media" | "baja";
+    adjustments: string;
+  };
+  chromaticProfile: ChromaticProfile;
+  personalizedExplanation: string;
+  personalizedTips: string[];
+}
+
 export interface AnalysisResult {
   profile: ChromaticProfile;
   recommendedColors: ColorRecommendation[];
   avoidColors: ColorRecommendation[];
   explanation: string;
   tips: string[];
+  aiAnalysis?: AIPhotoAnalysis;
+  confidence: number;
 }
 
 // Scoring helpers
-function temperatureScore(skinTone: string, hairColor: string, eyeColor: string): number {
+function temperatureScore(skinTone: string, hairColor: string, eyeColor: string, undertone: string): number {
   let score = 0;
   const warmSkins = ["tan", "medium", "olive", "golden"];
   const coolSkins = ["fair", "light", "porcelain"];
@@ -51,6 +79,10 @@ function temperatureScore(skinTone: string, hairColor: string, eyeColor: string)
   if (warmEyes.includes(eyeColor)) score += 1;
   if (coolEyes.includes(eyeColor)) score -= 1;
 
+  // Undertone adds strong signal
+  if (undertone === "warm") score += 3;
+  if (undertone === "cool") score -= 3;
+
   return score;
 }
 
@@ -60,7 +92,6 @@ function intensityScore(skinTone: string, hairColor: string, eyeColor: string, c
   if (contrast === "medium") score += 1;
   if (contrast === "low") score -= 2;
 
-  // High contrast combos
   if (["black", "dark-brown"].includes(hairColor) && ["fair", "light"].includes(skinTone)) score += 2;
   if (["blonde", "red"].includes(hairColor) && ["blue", "green"].includes(eyeColor)) score += 1;
   if (["blonde", "light-brown"].includes(hairColor) && ["fair", "light"].includes(skinTone)) score -= 1;
@@ -68,7 +99,7 @@ function intensityScore(skinTone: string, hairColor: string, eyeColor: string, c
   return score;
 }
 
-function depthScore(skinTone: string, hairColor: string, eyeColor: string): number {
+function depthScore(skinTone: string, hairColor: string, eyeColor: string, hairDepth: string): number {
   let score = 0;
   const deepSkins = ["tan", "dark", "olive"];
   const lightSkins = ["fair", "light", "porcelain"];
@@ -82,19 +113,22 @@ function depthScore(skinTone: string, hairColor: string, eyeColor: string): numb
   if (["dark-brown", "brown"].includes(eyeColor)) score += 1;
   if (["blue", "green", "grey", "hazel"].includes(eyeColor)) score -= 1;
 
+  // Hair depth signal
+  if (hairDepth === "dark") score += 1.5;
+  if (hairDepth === "light") score -= 1.5;
+
   return score;
 }
 
 function classifyProfile(user: UserProfile): ChromaticProfile {
-  const temp = temperatureScore(user.skinTone, user.hairColor, user.eyeColor);
+  const temp = temperatureScore(user.skinTone, user.hairColor, user.eyeColor, user.undertone);
   const intens = intensityScore(user.skinTone, user.hairColor, user.eyeColor, user.contrast);
-  const depth = depthScore(user.skinTone, user.hairColor, user.eyeColor);
+  const depth = depthScore(user.skinTone, user.hairColor, user.eyeColor, user.hairDepth);
 
   const temperature: ChromaticProfile["temperature"] = temp > 1 ? "cálido" : temp < -1 ? "frío" : "neutro";
   const intensity: ChromaticProfile["intensity"] = intens > 1 ? "intenso" : "suave";
   const depthVal: ChromaticProfile["depth"] = depth > 1 ? "profundo" : depth < -1 ? "claro" : "medio";
 
-  // Season mapping
   let season = "";
   let seasonKey = "";
   if (temperature === "cálido" && intensity === "suave") { season = "Otoño Suave"; seasonKey = "warm-soft"; }
@@ -233,13 +267,13 @@ const seasonPalettes: Record<string, { recommended: ColorRecommendation[]; avoid
 
 function generateExplanation(profile: ChromaticProfile, style: string): string {
   const tempText = {
-    cálido: "Tu subtono de piel tiene matices cálidos (dorados, melocotón). Esto significa que los colores con base amarilla, naranja y terrosa se fusionan armoniosamente con tu tono natural.",
+    cálido: "Tu subtono de piel tiene matices cálidos (dorados, melocotón). Los colores con base amarilla, naranja y terrosa se fusionan armoniosamente con tu tono natural.",
     frío: "Tu subtono de piel tiene matices fríos (rosados, azulados). Los colores con base azul, púrpura y gris resaltan tu luminosidad natural de forma elegante.",
-    neutro: "Tu subtono es equilibrado, con matices tanto cálidos como fríos. Esto te da la versatilidad de usar una amplia gama de colores con soltura.",
+    neutro: "Tu subtono es equilibrado, con matices tanto cálidos como fríos. Tienes la versatilidad de usar una amplia gama de colores con soltura.",
   };
 
   const intensText = {
-    suave: "Tus rasgos tienen un contraste suave y armonioso, lo que significa que los tonos apagados, empolvados y sutiles te favorecen especialmente.",
+    suave: "Tus rasgos tienen un contraste suave y armonioso — los tonos apagados, empolvados y sutiles te favorecen especialmente.",
     intenso: "Tus rasgos tienen un contraste marcado y definido. Los colores vibrantes, profundos y saturados te dan presencia y resaltan tu expresividad.",
   };
 
@@ -286,15 +320,33 @@ function generateTips(profile: ChromaticProfile): string[] {
   return tips;
 }
 
-export function analyzeUser(user: UserProfile): AnalysisResult {
-  const profile = classifyProfile(user);
-  const paletteData = seasonPalettes[profile.seasonKey] || seasonPalettes["neutral-soft"];
+export function analyzeUser(user: UserProfile, aiAnalysis?: AIPhotoAnalysis): AnalysisResult {
+  const localProfile = classifyProfile(user);
+  
+  // If we have AI analysis, use it as primary source with local as fallback
+  if (aiAnalysis?.chromaticProfile) {
+    const aiProfile = aiAnalysis.chromaticProfile;
+    const paletteData = seasonPalettes[aiProfile.seasonKey] || seasonPalettes[localProfile.seasonKey] || seasonPalettes["neutral-soft"];
 
+    return {
+      profile: aiProfile,
+      recommendedColors: paletteData.recommended,
+      avoidColors: paletteData.avoid,
+      explanation: aiAnalysis.personalizedExplanation || generateExplanation(aiProfile, user.style),
+      tips: aiAnalysis.personalizedTips?.length ? aiAnalysis.personalizedTips : generateTips(aiProfile),
+      aiAnalysis,
+      confidence: aiAnalysis.photoAnalysis?.confidence || 75,
+    };
+  }
+
+  // Fallback to local analysis
+  const paletteData = seasonPalettes[localProfile.seasonKey] || seasonPalettes["neutral-soft"];
   return {
-    profile,
+    profile: localProfile,
     recommendedColors: paletteData.recommended,
     avoidColors: paletteData.avoid,
-    explanation: generateExplanation(profile, user.style),
-    tips: generateTips(profile),
+    explanation: generateExplanation(localProfile, user.style),
+    tips: generateTips(localProfile),
+    confidence: 60,
   };
 }
