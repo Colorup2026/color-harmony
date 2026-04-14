@@ -1,14 +1,16 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, ArrowRight, Upload, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, Sparkles, Camera } from "lucide-react";
 
 interface FormData {
   name: string;
   email: string;
   photo: string | null;
   skinTone: string;
+  undertone: string;
   hairColor: string;
+  hairDepth: string;
   eyeColor: string;
   gender: string;
   style: string;
@@ -26,6 +28,12 @@ const skinTones = [
   { id: "porcelain", label: "Porcelana", color: "#FFF5EE" },
 ];
 
+const undertoneOptions = [
+  { id: "warm", label: "Cálido", desc: "Las venas de tu muñeca se ven verdosas. Te favorece el dorado.", color: "#F5DEB3", visual: "☀️" },
+  { id: "cool", label: "Frío", desc: "Las venas de tu muñeca se ven azuladas. Te favorece la plata.", color: "#B0C4DE", visual: "❄️" },
+  { id: "neutral", label: "Neutro", desc: "Tus venas son una mezcla. Te favorecen ambos metales.", color: "#D4C5B2", visual: "⚖️" },
+];
+
 const hairColors = [
   { id: "blonde", label: "Rubio", color: "#E8D5A3" },
   { id: "strawberry", label: "Rubio Fresa", color: "#C78C6C" },
@@ -35,6 +43,12 @@ const hairColors = [
   { id: "red", label: "Pelirrojo", color: "#A0522D" },
   { id: "ash-brown", label: "Castaño Ceniza", color: "#8B7D6B" },
   { id: "grey", label: "Gris / Blanco", color: "#C0C0C0" },
+];
+
+const hairDepthOptions = [
+  { id: "light", label: "Claro", desc: "Rubio, castaño claro, pelirrojo claro", visual: "🌞" },
+  { id: "medium", label: "Medio", desc: "Castaño, castaño ceniza, rubio oscuro", visual: "🌤️" },
+  { id: "dark", label: "Oscuro", desc: "Castaño oscuro, negro, gris oscuro", visual: "🌑" },
 ];
 
 const eyeColors = [
@@ -69,7 +83,7 @@ const contrastOptions = [
   { id: "high", label: "Alto", desc: "Gran contraste entre piel, cabello y ojos", visual: "🌗" },
 ];
 
-const totalSteps = 8;
+const totalSteps = 10;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
@@ -79,7 +93,9 @@ const Questionnaire = () => {
     email: "",
     photo: null,
     skinTone: "",
+    undertone: "",
     hairColor: "",
+    hairDepth: "",
     eyeColor: "",
     gender: "",
     style: "",
@@ -95,9 +111,11 @@ const Questionnaire = () => {
       case 2: return formData.style !== "";
       case 3: return true; // photo optional
       case 4: return formData.skinTone !== "";
-      case 5: return formData.hairColor !== "";
-      case 6: return formData.eyeColor !== "";
-      case 7: return formData.contrast !== "";
+      case 5: return formData.undertone !== "";
+      case 6: return formData.hairColor !== "";
+      case 7: return formData.hairDepth !== "";
+      case 8: return formData.eyeColor !== "";
+      case 9: return formData.contrast !== "";
       default: return false;
     }
   }, [step, formData]);
@@ -115,8 +133,28 @@ const Questionnaire = () => {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Resize image to reduce base64 size for AI analysis
       const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, photo: reader.result as string });
+      reader.onloadend = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxSize = 800;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxSize || h > maxSize) {
+            if (w > h) { h = (h / w) * maxSize; w = maxSize; }
+            else { w = (w / h) * maxSize; h = maxSize; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, w, h);
+          const resized = canvas.toDataURL("image/jpeg", 0.8);
+          setFormData({ ...formData, photo: resized });
+        };
+        img.src = reader.result as string;
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -230,15 +268,17 @@ const Questionnaire = () => {
                   <img src={formData.photo} alt="Tu foto" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <>
-                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                    <Camera className="w-8 h-8 text-muted-foreground mb-2" />
                     <span className="text-sm text-muted-foreground">Sube un selfie</span>
-                    <span className="text-xs text-muted-foreground mt-1">(Opcional)</span>
+                    <span className="text-xs text-muted-foreground mt-1">Mejora la precisión del análisis</span>
                   </>
                 )}
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
-            <p className="text-xs text-muted-foreground mt-4">Tu foto nos ayuda a afinar la recomendación. No es obligatoria.</p>
+            <p className="text-xs text-muted-foreground mt-4 max-w-xs mx-auto">
+              Tu foto nos permite analizar tus rasgos con IA y comparar con tus respuestas para un resultado más preciso.
+            </p>
             {formData.photo && (
               <button onClick={() => setFormData({ ...formData, photo: null })} className="mt-3 text-sm text-muted-foreground underline">
                 Eliminar foto
@@ -249,10 +289,55 @@ const Questionnaire = () => {
       case 4:
         return <div className="animate-fade-in-up"><ColorOptionGrid items={skinTones} selected={formData.skinTone} onSelect={(id) => setFormData({ ...formData, skinTone: id })} /></div>;
       case 5:
-        return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
+        return (
+          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
+            {undertoneOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, undertone: opt.id })}
+                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
+                  formData.undertone === opt.id
+                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium"
+                } bg-background`}
+              >
+                <span className="text-3xl">{opt.visual}</span>
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                </div>
+                <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: opt.color }} />
+              </button>
+            ))}
+          </div>
+        );
       case 6:
-        return <div className="animate-fade-in-up"><ColorOptionGrid items={eyeColors} selected={formData.eyeColor} onSelect={(id) => setFormData({ ...formData, eyeColor: id })} /></div>;
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
       case 7:
+        return (
+          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
+            {hairDepthOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, hairDepth: opt.id })}
+                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
+                  formData.hairDepth === opt.id
+                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium"
+                } bg-background`}
+              >
+                <span className="text-3xl">{opt.visual}</span>
+                <div>
+                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+      case 8:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={eyeColors} selected={formData.eyeColor} onSelect={(id) => setFormData({ ...formData, eyeColor: id })} /></div>;
+      case 9:
         return (
           <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
             {contrastOptions.map((opt) => (
@@ -283,7 +368,9 @@ const Questionnaire = () => {
     "¿Cuál es tu estilo?",
     "Sube una foto tuya",
     "¿Cuál es tu tono de piel?",
+    "¿Cuál es tu subtono?",
     "¿Cuál es tu color de cabello?",
+    "¿Qué profundidad tiene tu cabello?",
     "¿Cuál es tu color de ojos?",
     "¿Cuál es tu nivel de contraste?",
   ];
@@ -292,9 +379,11 @@ const Questionnaire = () => {
     "Cuéntanos un poco sobre ti",
     "Esto nos ayuda a personalizar tus recomendaciones",
     "Define tu estilo para recomendaciones más precisas",
-    "Una foto nos ayuda a afinar tu análisis cromático",
+    "Nuestra IA analizará tus rasgos para un resultado más preciso",
     "Selecciona el que más se parezca al tuyo",
+    "Mira las venas de tu muñeca a la luz natural",
     "Elige el color más cercano al tuyo natural",
+    "¿Tu cabello es claro, medio u oscuro en general?",
     "Selecciona tu color de ojos natural",
     "Compara la diferencia entre tu piel, cabello y ojos",
   ];
