@@ -14,18 +14,35 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Eres un experto en análisis cromático y colorimetría personal. Analiza la foto del usuario y compárala con las respuestas de su cuestionario para generar un perfil cromático preciso.
+    const systemPrompt = `Eres un experto en análisis cromático y colorimetría personal. Analiza la foto del usuario y genera un perfil cromático preciso.
 
-INSTRUCCIONES:
-1. Analiza la foto para detectar: tono de piel, subtono (cálido/frío/neutro), color de cabello, profundidad del cabello, color de ojos, nivel de contraste visual, intensidad de rasgos.
-2. Compara lo que ves en la foto con las respuestas del cuestionario.
-3. Si coinciden, aumenta la confianza. Si hay diferencias menores, combina. Si hay contradicción, da un resultado equilibrado.
-4. Genera un perfil cromático completo.
+INSTRUCCIONES ESTRICTAS:
 
-DEBES responder ÚNICAMENTE con JSON válido, sin texto adicional. El formato exacto es:
+1. PRIORIDAD DE IMAGEN: La foto es la fuente principal. Si hay contradicción entre foto y cuestionario, prioriza lo que ves en la imagen.
+
+2. CONTROL DE CALIDAD DE IMAGEN:
+   - Si la imagen es demasiado oscura, borrosa o no se ve claramente el rostro, responde SOLO con:
+   {"imageQualityError": "La imagen no tiene suficiente calidad para un análisis preciso. Te recomendamos subir una foto con mejor iluminación y el rostro visible."}
+   - No inventes rasgos que no puedas detectar claramente.
+
+3. DETECCIÓN OBLIGATORIA en la foto:
+   - Subtono: cálido / frío / neutro
+   - Profundidad: claro / medio / oscuro
+   - Contraste: bajo / medio / alto
+   - Intensidad: suave / intenso
+
+4. VALIDACIÓN: La respuesta sobre reacción al sol (sunReaction: burn=frío, tan=cálido, mixed=neutro) se usa SOLO como confirmación, no como factor principal.
+
+5. NO INVENTAR: Si no puedes detectar algo, indícalo brevemente.
+
+6. COHERENCIA: Ajusta silenciosamente si hay contradicciones menores.
+
+7. RESPUESTA CONCISA: El perfil y la explicación deben ser directos, ~100 palabras máximo total.
+
+DEBES responder ÚNICAMENTE con JSON válido. Formato:
 {
   "photoAnalysis": {
-    "detectedSkinTone": "string (ej: medio-claro, oliva, dorado)",
+    "detectedSkinTone": "string",
     "detectedUndertone": "cálido" | "frío" | "neutro",
     "detectedHairColor": "string",
     "detectedHairDepth": "claro" | "medio" | "oscuro",
@@ -40,32 +57,39 @@ DEBES responder ÚNICAMENTE con JSON válido, sin texto adicional. El formato ex
     "eyeColorMatch": boolean,
     "contrastMatch": boolean,
     "overallAgreement": "alta" | "media" | "baja",
-    "adjustments": "string explicando ajustes realizados"
+    "adjustments": "string breve"
   },
   "chromaticProfile": {
     "temperature": "cálido" | "frío" | "neutro",
     "intensity": "suave" | "intenso",
     "depth": "claro" | "medio" | "profundo",
-    "season": "string (ej: Otoño Suave, Invierno Brillante, Verano Suave, Primavera Clara, etc.)",
+    "season": "string (ej: Otoño Suave)",
     "seasonKey": "warm-soft" | "warm-intense" | "cool-soft" | "cool-intense" | "neutral-soft" | "neutral-intense"
   },
-  "personalizedExplanation": "string - explicación personalizada de 2-3 frases sobre por qué estos colores le favorecen, mencionando sus rasgos específicos",
-  "personalizedTips": ["array de 4-6 tips específicos para esta persona"]
-}`;
+  "profile": "string - 1-2 líneas claras y naturales describiendo el perfil del usuario",
+  "recommendedColors": [{"name": "string", "hex": "string"}],
+  "avoidColors": [{"name": "string", "hex": "string"}],
+  "clothingSuggestions": [{"item": "string", "reason": "string"}],
+  "personalizedTips": ["array de 3-4 tips cortos y directos"]
+}
 
-    const userPrompt = `Analiza esta foto y compárala con las respuestas del cuestionario:
+REGLAS DE RECOMENDACIÓN DE ROPA:
+- Las prendas DEBEN coincidir estrictamente con el estilo seleccionado (${questionnaire.style}). No mezcles estilos.
+- Adapta al género: ${questionnaire.gender}
+- Máximo 4-5 prendas recomendadas, cada una con razón breve.
+- Genera 5-6 colores recomendados y 2-3 a evitar con nombre y hex.`;
 
-RESPUESTAS DEL CUESTIONARIO:
-- Tono de piel seleccionado: ${questionnaire.skinTone}
-- Subtono seleccionado: ${questionnaire.undertone || "no especificado"}
-- Color de cabello: ${questionnaire.hairColor}
-- Profundidad del cabello: ${questionnaire.hairDepth || "no especificado"}
+    const userPrompt = `Analiza esta foto y compárala con el cuestionario:
+
+CUESTIONARIO:
+- Tono de piel: ${questionnaire.skinTone}
 - Color de ojos: ${questionnaire.eyeColor}
-- Contraste percibido: ${questionnaire.contrast}
+- Color de cabello: ${questionnaire.hairColor}
+- Estilo: ${questionnaire.style}
 - Género: ${questionnaire.gender}
-- Estilo preferido: ${questionnaire.style}
+- Reacción al sol: ${questionnaire.sunReaction || "no especificado"} (solo validación)
 
-Genera el análisis cromático completo comparando la foto con estas respuestas.`;
+Genera el análisis cromático completo.`;
 
     const messages: any[] = [
       { role: "system", content: systemPrompt },
@@ -119,7 +143,6 @@ Genera el análisis cromático completo comparando la foto con estas respuestas.
 
     if (!content) throw new Error("No content in AI response");
 
-    // Parse JSON from response (handle markdown code blocks)
     let parsed;
     try {
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);

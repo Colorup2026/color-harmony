@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, ArrowRight, Upload, Sparkles, Camera } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, Sparkles, Camera, CheckCircle2 } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -9,12 +9,13 @@ interface FormData {
   photo: string | null;
   skinTone: string;
   undertone: string;
+  sunReaction: string;
   hairColor: string;
-  hairDepth: string;
   eyeColor: string;
   gender: string;
   style: string;
   contrast: string;
+  photoConsent: boolean;
 }
 
 const skinTones = [
@@ -28,10 +29,15 @@ const skinTones = [
   { id: "porcelain", label: "Porcelana", color: "#FFF5EE" },
 ];
 
-const undertoneOptions = [
-  { id: "warm", label: "Cálido", desc: "Las venas de tu muñeca se ven verdosas. Te favorece el dorado.", color: "#F5DEB3", visual: "☀️" },
-  { id: "cool", label: "Frío", desc: "Las venas de tu muñeca se ven azuladas. Te favorece la plata.", color: "#B0C4DE", visual: "❄️" },
-  { id: "neutral", label: "Neutro", desc: "Tus venas son una mezcla. Te favorecen ambos metales.", color: "#D4C5B2", visual: "⚖️" },
+const eyeColors = [
+  { id: "blue", label: "Azul", color: "#6CA0DC" },
+  { id: "green", label: "Verde", color: "#7BA17C" },
+  { id: "hazel", label: "Avellana", color: "#8E7618" },
+  { id: "amber", label: "Ámbar", color: "#FFBF00" },
+  { id: "honey", label: "Miel", color: "#B8860B" },
+  { id: "brown", label: "Marrón", color: "#6B4226" },
+  { id: "dark-brown", label: "Marrón Oscuro", color: "#3B2F2F" },
+  { id: "grey", label: "Gris", color: "#A8B5C2" },
 ];
 
 const hairColors = [
@@ -45,23 +51,6 @@ const hairColors = [
   { id: "grey", label: "Gris / Blanco", color: "#C0C0C0" },
 ];
 
-const hairDepthOptions = [
-  { id: "light", label: "Claro", desc: "Rubio, castaño claro, pelirrojo claro", visual: "🌞" },
-  { id: "medium", label: "Medio", desc: "Castaño, castaño ceniza, rubio oscuro", visual: "🌤️" },
-  { id: "dark", label: "Oscuro", desc: "Castaño oscuro, negro, gris oscuro", visual: "🌑" },
-];
-
-const eyeColors = [
-  { id: "blue", label: "Azul", color: "#6CA0DC" },
-  { id: "green", label: "Verde", color: "#7BA17C" },
-  { id: "hazel", label: "Avellana", color: "#8E7618" },
-  { id: "amber", label: "Ámbar", color: "#FFBF00" },
-  { id: "honey", label: "Miel", color: "#B8860B" },
-  { id: "brown", label: "Marrón", color: "#6B4226" },
-  { id: "dark-brown", label: "Marrón Oscuro", color: "#3B2F2F" },
-  { id: "grey", label: "Gris", color: "#A8B5C2" },
-];
-
 const genderOptions = [
   { id: "mujer", label: "Mujer", emoji: "👩" },
   { id: "hombre", label: "Hombre", emoji: "👨" },
@@ -69,21 +58,20 @@ const genderOptions = [
 ];
 
 const styleOptions = [
-  { id: "casual", label: "Casual", emoji: "👕", desc: "Cómodo y relajado" },
-  { id: "elegante", label: "Elegante", emoji: "👔", desc: "Sofisticado y pulido" },
   { id: "streetwear", label: "Streetwear", emoji: "🧢", desc: "Urbano y moderno" },
-  { id: "clasico", label: "Clásico", emoji: "🎩", desc: "Atemporal y refinado" },
-  { id: "minimalista", label: "Minimalista", emoji: "◻️", desc: "Limpio y esencial" },
-  { id: "bohemio", label: "Bohemio", emoji: "🌿", desc: "Libre y artístico" },
+  { id: "casual", label: "Casual", emoji: "👕", desc: "Cómodo y relajado" },
+  { id: "elegante", label: "Elegante / Smart", emoji: "👔", desc: "Sofisticado y pulido" },
+  { id: "deportivo", label: "Deportivo / Active", emoji: "🏃", desc: "Funcional y dinámico" },
+  { id: "trendy", label: "Trendy / Fashion", emoji: "💎", desc: "A la última tendencia" },
 ];
 
-const contrastOptions = [
-  { id: "low", label: "Bajo", desc: "Piel, cabello y ojos de tonos similares", visual: "🌫️" },
-  { id: "medium", label: "Medio", desc: "Diferencia moderada entre rasgos", visual: "🌤️" },
-  { id: "high", label: "Alto", desc: "Gran contraste entre piel, cabello y ojos", visual: "🌗" },
+const sunReactionOptions = [
+  { id: "burn", label: "Me quemo fácilmente y me cuesta broncearme", hint: "Suele indicar subtono frío", visual: "☀️🔥" },
+  { id: "tan", label: "Me bronceo con facilidad y rara vez me quemo", hint: "Suele indicar subtono cálido", visual: "☀️✨" },
+  { id: "mixed", label: "A veces me quemo y a veces me bronceo / No estoy seguro/a", hint: "Puede indicar subtono neutro", visual: "☀️🤷" },
 ];
 
-const totalSteps = 10;
+const totalSteps = 9;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
@@ -94,12 +82,13 @@ const Questionnaire = () => {
     photo: null,
     skinTone: "",
     undertone: "",
+    sunReaction: "",
     hairColor: "",
-    hairDepth: "",
     eyeColor: "",
     gender: "",
     style: "",
     contrast: "",
+    photoConsent: false,
   });
 
   const progress = ((step + 1) / totalSteps) * 100;
@@ -108,21 +97,42 @@ const Questionnaire = () => {
     switch (step) {
       case 0: return formData.name.trim() !== "" && formData.email.trim() !== "";
       case 1: return formData.gender !== "";
-      case 2: return formData.style !== "";
-      case 3: return true; // photo optional
-      case 4: return formData.skinTone !== "";
-      case 5: return formData.undertone !== "";
-      case 6: return formData.hairColor !== "";
-      case 7: return formData.hairDepth !== "";
-      case 8: return formData.eyeColor !== "";
-      case 9: return formData.contrast !== "";
+      case 2: return formData.skinTone !== "";
+      case 3: return formData.eyeColor !== "";
+      case 4: return formData.hairColor !== "";
+      case 5: return formData.style !== "";
+      case 6: return formData.sunReaction !== "";
+      case 7: return formData.photo !== null && formData.photoConsent;
+      case 8: return true; // summary
       default: return false;
     }
   }, [step, formData]);
 
   const handleNext = () => {
     if (step < totalSteps - 1) setStep(step + 1);
-    else navigate("/results", { state: formData });
+    else {
+      // Derive undertone from sun reaction for the analysis engine
+      let undertone = "neutral";
+      if (formData.sunReaction === "burn") undertone = "cool";
+      else if (formData.sunReaction === "tan") undertone = "warm";
+
+      navigate("/results", {
+        state: {
+          name: formData.name,
+          email: formData.email,
+          photo: formData.photo,
+          skinTone: formData.skinTone,
+          undertone,
+          hairColor: formData.hairColor,
+          hairDepth: "medium", // AI will detect from photo
+          eyeColor: formData.eyeColor,
+          gender: formData.gender,
+          style: formData.style,
+          contrast: "medium", // AI will detect from photo
+          sunReaction: formData.sunReaction,
+        },
+      });
+    }
   };
 
   const handleBack = () => {
@@ -133,7 +143,6 @@ const Questionnaire = () => {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Resize image to reduce base64 size for AI analysis
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
@@ -236,6 +245,12 @@ const Questionnaire = () => {
           </div>
         );
       case 2:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={skinTones} selected={formData.skinTone} onSelect={(id) => setFormData({ ...formData, skinTone: id })} /></div>;
+      case 3:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={eyeColors} selected={formData.eyeColor} onSelect={(id) => setFormData({ ...formData, eyeColor: id })} /></div>;
+      case 4:
+        return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
+      case 5:
         return (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg mx-auto animate-fade-in-up">
             {styleOptions.map((opt) => (
@@ -255,9 +270,34 @@ const Questionnaire = () => {
             ))}
           </div>
         );
-      case 3:
+      case 6:
+        return (
+          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
+            {sunReactionOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setFormData({ ...formData, sunReaction: opt.id })}
+                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
+                  formData.sunReaction === opt.id
+                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
+                    : "shadow-soft hover:shadow-medium"
+                } bg-background`}
+              >
+                <span className="text-2xl">{opt.visual}</span>
+                <div className="flex-1">
+                  <span className="text-sm font-medium text-foreground block">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground italic">{opt.hint}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+      case 7:
         return (
           <div className="max-w-sm mx-auto text-center animate-fade-in-up">
+            <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto leading-relaxed">
+              Sube una foto de frente, con buena iluminación natural o luz blanca, sin filtros, sin gafas de sol y con el rostro bien visible. Esto es clave para obtener un análisis preciso.
+            </p>
             <label className="block cursor-pointer">
               <div
                 className={`w-48 h-48 mx-auto rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 ${
@@ -269,94 +309,50 @@ const Questionnaire = () => {
                 ) : (
                   <>
                     <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">Sube un selfie</span>
-                    <span className="text-xs text-muted-foreground mt-1">Mejora la precisión del análisis</span>
+                    <span className="text-sm text-muted-foreground">Sube tu foto</span>
                   </>
                 )}
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
-            <p className="text-xs text-muted-foreground mt-4 max-w-xs mx-auto">
-              Tu foto nos permite analizar tus rasgos con IA y comparar con tus respuestas para un resultado más preciso.
-            </p>
             {formData.photo && (
               <button onClick={() => setFormData({ ...formData, photo: null })} className="mt-3 text-sm text-muted-foreground underline">
                 Eliminar foto
               </button>
             )}
-          </div>
-        );
-      case 4:
-        return <div className="animate-fade-in-up"><ColorOptionGrid items={skinTones} selected={formData.skinTone} onSelect={(id) => setFormData({ ...formData, skinTone: id })} /></div>;
-      case 5:
-        return (
-          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
-            {undertoneOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setFormData({ ...formData, undertone: opt.id })}
-                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
-                  formData.undertone === opt.id
-                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
-                    : "shadow-soft hover:shadow-medium"
-                } bg-background`}
-              >
-                <span className="text-3xl">{opt.visual}</span>
-                <div className="flex-1">
-                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                </div>
-                <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: opt.color }} />
-              </button>
-            ))}
-          </div>
-        );
-      case 6:
-        return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
-      case 7:
-        return (
-          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
-            {hairDepthOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setFormData({ ...formData, hairDepth: opt.id })}
-                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
-                  formData.hairDepth === opt.id
-                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
-                    : "shadow-soft hover:shadow-medium"
-                } bg-background`}
-              >
-                <span className="text-3xl">{opt.visual}</span>
-                <div>
-                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                </div>
-              </button>
-            ))}
+            <label className="flex items-start gap-3 mt-6 text-left max-w-xs mx-auto cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.photoConsent}
+                onChange={(e) => setFormData({ ...formData, photoConsent: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded border-border accent-accent"
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                Consiento el uso de mi foto únicamente para esta recomendación personalizada
+              </span>
+            </label>
           </div>
         );
       case 8:
-        return <div className="animate-fade-in-up"><ColorOptionGrid items={eyeColors} selected={formData.eyeColor} onSelect={(id) => setFormData({ ...formData, eyeColor: id })} /></div>;
-      case 9:
         return (
-          <div className="flex flex-col gap-4 max-w-md mx-auto animate-fade-in-up">
-            {contrastOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => setFormData({ ...formData, contrast: opt.id })}
-                className={`flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 text-left ${
-                  formData.contrast === opt.id
-                    ? "shadow-medium scale-[1.02] ring-2 ring-accent"
-                    : "shadow-soft hover:shadow-medium"
-                } bg-background`}
-              >
-                <span className="text-3xl">{opt.visual}</span>
-                <div>
-                  <span className="text-sm font-semibold text-foreground block">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
+          <div className="max-w-md mx-auto animate-fade-in-up text-center">
+            <div className="p-6 rounded-2xl bg-gradient-card shadow-soft mb-6">
+              <p className="text-sm text-foreground font-medium mb-4">Resumen de tu perfil</p>
+              <div className="grid grid-cols-2 gap-3 text-left text-xs text-muted-foreground">
+                <div><span className="font-medium text-foreground">Nombre:</span> {formData.name}</div>
+                <div><span className="font-medium text-foreground">Género:</span> {formData.gender}</div>
+                <div><span className="font-medium text-foreground">Piel:</span> {skinTones.find(s => s.id === formData.skinTone)?.label}</div>
+                <div><span className="font-medium text-foreground">Ojos:</span> {eyeColors.find(s => s.id === formData.eyeColor)?.label}</div>
+                <div><span className="font-medium text-foreground">Cabello:</span> {hairColors.find(s => s.id === formData.hairColor)?.label}</div>
+                <div><span className="font-medium text-foreground">Estilo:</span> {styleOptions.find(s => s.id === formData.style)?.label}</div>
+              </div>
+              {formData.photo && (
+                <div className="mt-4">
+                  <img src={formData.photo} alt="Tu foto" className="w-16 h-16 rounded-xl object-cover mx-auto" />
                 </div>
-              </button>
-            ))}
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">¿Todo correcto? Pulsa "Analizar" para obtener tus resultados.</p>
           </div>
         );
     }
@@ -365,27 +361,25 @@ const Questionnaire = () => {
   const stepTitles = [
     "Vamos a conocerte",
     "¿Cómo te identificas?",
-    "¿Cuál es tu estilo?",
-    "Sube una foto tuya",
     "¿Cuál es tu tono de piel?",
-    "¿Cuál es tu subtono?",
-    "¿Cuál es tu color de cabello?",
-    "¿Qué profundidad tiene tu cabello?",
     "¿Cuál es tu color de ojos?",
-    "¿Cuál es tu nivel de contraste?",
+    "¿Cuál es tu color de cabello?",
+    "¿Cuál es tu estilo?",
+    "Cuando te expones al sol, ¿cómo reacciona tu piel?",
+    "Sube una foto tuya",
+    "Revisa tu perfil",
   ];
 
   const stepSubtitles = [
     "Cuéntanos un poco sobre ti",
     "Esto nos ayuda a personalizar tus recomendaciones",
-    "Define tu estilo para recomendaciones más precisas",
-    "Nuestra IA analizará tus rasgos para un resultado más preciso",
     "Selecciona el que más se parezca al tuyo",
-    "Mira las venas de tu muñeca a la luz natural",
-    "Elige el color más cercano al tuyo natural",
-    "¿Tu cabello es claro, medio u oscuro en general?",
     "Selecciona tu color de ojos natural",
-    "Compara la diferencia entre tu piel, cabello y ojos",
+    "Elige el color más cercano al tuyo natural",
+    "Define tu estilo para recomendaciones más precisas",
+    "Esta pregunta nos ayuda a identificar si tu piel tiene un subtono cálido o frío",
+    "Nuestra IA analizará tus rasgos para un resultado preciso",
+    "Confirma tus datos antes de obtener el análisis",
   ];
 
   return (
@@ -393,7 +387,7 @@ const Questionnaire = () => {
       <Navbar />
       <div className="pt-16 min-h-screen flex flex-col">
         <div className="w-full h-1.5 bg-muted">
-          <div className="h-full bg-gradient-warm transition-all duration-500 ease-out rounded-r-full" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-gradient-button transition-all duration-500 ease-out rounded-r-full" style={{ width: `${progress}%` }} />
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
@@ -418,7 +412,7 @@ const Questionnaire = () => {
             <button
               onClick={handleNext}
               disabled={!canNext()}
-              className="flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-warm text-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-button text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
               {step === totalSteps - 1 ? (
                 <>
