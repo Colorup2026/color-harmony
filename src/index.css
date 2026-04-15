@@ -6,53 +6,52 @@
 
 @layer base {
   :root {
-    --background: 300 20% 97%;
-    --foreground: 280 20% 15%;
+    --background: 0 0% 99%;
+    --foreground: 0 0% 12%;
 
-    --card: 300 15% 95%;
-    --card-foreground: 280 20% 15%;
+    --card: 0 0% 97%;
+    --card-foreground: 0 0% 12%;
 
-    --popover: 300 20% 97%;
-    --popover-foreground: 280 20% 15%;
+    --popover: 0 0% 99%;
+    --popover-foreground: 0 0% 12%;
 
-    --primary: 280 30% 78%;
-    --primary-foreground: 280 20% 15%;
+    --primary: 270 40% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 340 100% 89%;
-    --secondary-foreground: 280 20% 25%;
+    --secondary: 210 100% 82%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 300 12% 92%;
-    --muted-foreground: 280 10% 45%;
+    --muted: 240 5% 92%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 340 100% 84%;
-    --accent-foreground: 280 20% 15%;
+    --accent: 320 70% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 300 15% 88%;
-    --input: 300 15% 88%;
-    --ring: 280 30% 78%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 270 40% 55%;
 
     --radius: 1rem;
 
-    /* Custom tokens — new pastel palette */
-    --warm-beige: 300 20% 92%;
-    --warm-nude: 280 30% 78%;
-    --soft-brown: 210 100% 82%;
-    --warm-grey: 300 12% 90%;
-    --peach: 340 100% 84%;
-    --peach-dark: 340 100% 74%;
-    --cream: 210 98% 93%;
+    /* Rainbow brand tokens from logo */
+    --brand-cyan: 195 100% 65%;
+    --brand-blue: 215 100% 70%;
+    --brand-purple: 270 50% 60%;
+    --brand-pink: 320 80% 65%;
+    --brand-magenta: 300 70% 55%;
 
-    --gradient-warm: linear-gradient(135deg, hsl(340 100% 89%), hsl(340 100% 84%));
-    --gradient-hero: linear-gradient(180deg, hsl(300 20% 97%) 0%, hsl(280 30% 92%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(300 15% 95%), hsl(340 100% 94%));
-    --gradient-accent: linear-gradient(135deg, hsl(340 100% 84%), hsl(280 30% 78%));
+    --gradient-rainbow: linear-gradient(135deg, hsl(195 100% 65%), hsl(215 100% 70%), hsl(270 50% 60%), hsl(320 80% 65%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(240 20% 96%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 98%), hsl(240 15% 96%));
+    --gradient-accent: linear-gradient(135deg, hsl(195 100% 65%), hsl(270 50% 60%), hsl(320 80% 65%));
+    --gradient-button: linear-gradient(135deg, hsl(270 50% 60%), hsl(320 80% 65%));
 
-    --shadow-soft: 0 4px 20px -4px hsl(280 30% 50% / 0.1);
-    --shadow-medium: 0 8px 30px -8px hsl(280 30% 50% / 0.15);
-    --shadow-glow: 0 0 40px hsl(340 100% 84% / 0.3);
+    --shadow-soft: 0 4px 20px -4px hsl(270 40% 50% / 0.08);
+    --shadow-medium: 0 8px 30px -8px hsl(270 40% 50% / 0.12);
+    --shadow-glow: 0 0 40px hsl(320 80% 65% / 0.2);
 
     --font-display: 'Playfair Display', Georgia, serif;
     --font-body: 'Inter', system-ui, sans-serif;
@@ -86,15 +85,19 @@
 }
 
 @layer utilities {
-  .text-gradient-warm {
+  .text-gradient-rainbow {
     background: var(--gradient-accent);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .bg-gradient-warm {
-    background: var(--gradient-warm);
+  .bg-gradient-rainbow {
+    background: var(--gradient-rainbow);
+  }
+
+  .bg-gradient-button {
+    background: var(--gradient-button);
   }
 
   .bg-gradient-hero {

@@ -1,10 +1,10 @@
 const beforeColors = ["#808080", "#4A4A4A", "#696969", "#9E9E9E"];
-const afterColors = ["#CDB4DB", "#FFC8DD", "#FFAFCC", "#A2D2FF"];
+const afterColors = ["#6CA0DC", "#9B7ED8", "#D462AC", "#E88FC4"];
 
 const WhyItMatters = () => {
   return (
-    <section className="py-20 md:py-28 bg-warm-cream/50 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-warm-peach/10 blur-3xl -translate-x-1/2 -translate-y-1/2" />
+    <section className="py-20 md:py-28 bg-muted/30 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-primary/5 blur-3xl -translate-x-1/2 -translate-y-1/2" />
 
       <div className="container mx-auto px-6">
         <div className="max-w-3xl mx-auto text-center mb-16">
@@ -40,7 +40,7 @@ const WhyItMatters = () => {
             </p>
           </div>
 
-          <div className="rounded-2xl p-8 bg-gradient-card shadow-medium text-center ring-2 ring-warm-peach/30">
+          <div className="rounded-2xl p-8 bg-gradient-card shadow-medium text-center ring-2 ring-accent/30">
             <p className="text-foreground text-xs tracking-widest uppercase mb-6 font-medium">
               Tus Colores Perfectos ✨
             </p>
