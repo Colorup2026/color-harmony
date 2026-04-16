@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { analyzeUser, type UserProfile, type AIPhotoAnalysis } from "@/lib/colorAnalysis";
-import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink } from "lucide-react";
+import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink, Star, ShieldX, Shirt } from "lucide-react";
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const formData = location.state as (UserProfile & { sunReaction?: string }) | null;
+  const formData = location.state as (UserProfile & { sunReaction?: string; styles?: string[]; veinColor?: string; fingerPress?: string; eyeWhites?: string; freckles?: string }) | null;
   const [aiData, setAiData] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -32,7 +32,12 @@ const Results = () => {
               eyeColor: formData.eyeColor,
               gender: formData.gender,
               style: formData.style,
-              sunReaction: (formData as any).sunReaction || "",
+              styles: (formData as any).styles || [formData.style],
+              sunReaction: formData.sunReaction || "",
+              veinColor: (formData as any).veinColor || "",
+              fingerPress: (formData as any).fingerPress || "",
+              eyeWhites: (formData as any).eyeWhites || "",
+              freckles: (formData as any).freckles || "",
             },
           },
         });
@@ -44,7 +49,6 @@ const Results = () => {
           setResult(analyzeUser(formData));
         } else if (data && !data.error) {
           setAiData(data);
-          // Use AI profile if available
           if (data.chromaticProfile) {
             setResult(analyzeUser(formData, data as AIPhotoAnalysis));
           }
@@ -71,10 +75,7 @@ const Results = () => {
         <div className="text-center pt-16">
           <h2 className="font-display text-2xl font-semibold text-foreground mb-4">Aún no hay resultados</h2>
           <p className="text-muted-foreground mb-6">¡Haz el análisis para descubrir tus colores!</p>
-          <button
-            onClick={() => navigate("/questionnaire")}
-            className="px-8 py-3 rounded-full bg-gradient-button text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all"
-          >
+          <button onClick={() => navigate("/questionnaire")} className="px-8 py-3 rounded-full bg-gradient-button text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all">
             Comenzar
           </button>
         </div>
@@ -107,26 +108,22 @@ const Results = () => {
     );
   }
 
-  // Use AI-enriched data if available
   const profileText = aiData?.profile || `Un perfil ${result.profile.temperature}, ${result.profile.intensity} y ${result.profile.depth}.`;
   const recommendedColors = aiData?.recommendedColors?.length ? aiData.recommendedColors : result.recommendedColors;
   const avoidColors = aiData?.avoidColors?.length ? aiData.avoidColors : result.avoidColors;
+  const whyColorsWork = aiData?.whyColorsWork || "";
+  const strengths: string[] = aiData?.strengths || [];
+  const whyAvoid = aiData?.whyAvoid || "";
   const clothingSuggestions = aiData?.clothingSuggestions || [];
+  const outfit = aiData?.outfit || null;
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
 
-  // Generate dynamic Desigual search URLs
-  const generateDesigualUrl = (color: string, garment: string) => {
-    const query = encodeURIComponent(`${color} ${garment}`);
-    return `https://www.desigual.com/es_ES/search?q=${query}`;
-  };
+  const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "persona";
 
-  const desigualSuggestions = clothingSuggestions.slice(0, 4).map((s: any, i: number) => {
-    const mainColor = recommendedColors[i]?.name || "color";
-    return {
-      ...s,
-      url: generateDesigualUrl(mainColor, s.item),
-    };
-  });
+  const generateSearchUrl = (garment: string, color: string) => {
+    const query = encodeURIComponent(`${garment} ${color} ${genderLabel}`);
+    return `https://www.google.com/search?q=${query}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -179,8 +176,8 @@ const Results = () => {
         {/* Recommended Colors */}
         <section className="py-10 px-6">
           <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-6 text-center">Colores Que Te Favorecen</h3>
-            <div className="grid grid-cols-5 sm:grid-cols-6 gap-3">
+            <h3 className="font-display text-xl font-semibold text-foreground mb-6 text-center">Tu Paleta Ideal</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
               {recommendedColors.slice(0, 6).map((color: any, i: number) => (
                 <div key={i} className="group text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.06}s` }}>
                   <div className="aspect-square rounded-2xl shadow-soft mb-2 transition-all duration-300 group-hover:shadow-medium group-hover:scale-105" style={{ backgroundColor: color.hex }} />
@@ -188,14 +185,40 @@ const Results = () => {
                 </div>
               ))}
             </div>
+            {whyColorsWork && (
+              <p className="text-muted-foreground text-sm text-center mt-6 max-w-lg mx-auto leading-relaxed">{whyColorsWork}</p>
+            )}
           </div>
         </section>
+
+        {/* Strengths */}
+        {strengths.length > 0 && (
+          <section className="py-8 px-6">
+            <div className="max-w-2xl mx-auto">
+              <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center flex items-center justify-center gap-2">
+                <Star className="w-5 h-5 text-accent" />
+                Puntos Fuertes
+              </h3>
+              <div className="space-y-2">
+                {strengths.map((s: string, i: number) => (
+                  <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
+                    <p className="text-sm text-foreground">{s}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Avoid Colors */}
         <section className="py-8 px-6">
           <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center">Mejor Evitar</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-w-xs mx-auto">
+            <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center flex items-center justify-center gap-2">
+              <ShieldX className="w-5 h-5 text-destructive/60" />
+              Mejor Evitar
+            </h3>
+            <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
               {avoidColors.slice(0, 3).map((color: any, i: number) => (
                 <div key={i} className="group text-center">
                   <div className="aspect-square rounded-2xl shadow-soft mb-2 opacity-60 ring-1 ring-destructive/20" style={{ backgroundColor: color.hex }} />
@@ -203,25 +226,77 @@ const Results = () => {
                 </div>
               ))}
             </div>
+            {whyAvoid && (
+              <p className="text-muted-foreground text-xs text-center mt-4 max-w-md mx-auto leading-relaxed">{whyAvoid}</p>
+            )}
           </div>
         </section>
 
-        {/* Clothing Suggestions */}
+        {/* Clothing Suggestions with links */}
         {clothingSuggestions.length > 0 && (
           <section className="py-12 px-6">
             <div className="max-w-2xl mx-auto">
-              <h3 className="font-display text-xl font-semibold text-foreground mb-2 text-center">Prendas Que Te Van Mejor</h3>
-              <p className="text-muted-foreground text-xs text-center mb-6">Según tu paleta y estilo {formData.style}</p>
+              <h3 className="font-display text-xl font-semibold text-foreground mb-2 text-center flex items-center justify-center gap-2">
+                <Shirt className="w-5 h-5 text-accent" />
+                Prendas Que Te Van Mejor
+              </h3>
+              <p className="text-muted-foreground text-xs text-center mb-6">Según tu paleta y estilo</p>
               <div className="space-y-3">
-                {clothingSuggestions.slice(0, 5).map((s: any, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{s.item}</p>
-                      <p className="text-xs text-muted-foreground">{s.reason}</p>
-                    </div>
-                  </div>
-                ))}
+                {clothingSuggestions.slice(0, 5).map((s: any, i: number) => {
+                  const url = s.searchUrl || generateSearchUrl(s.item, recommendedColors[i]?.name || "");
+                  return (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft hover:shadow-medium transition-all duration-300 group animate-fade-in-up"
+                      style={{ animationDelay: `${i * 0.08}s` }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{s.item}</p>
+                        <p className="text-xs text-muted-foreground">{s.reason}</p>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent mt-1 shrink-0 transition-colors" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Outfit */}
+        {outfit && outfit.pieces?.length > 0 && (
+          <section className="py-12 px-6 bg-muted/20">
+            <div className="max-w-2xl mx-auto">
+              <h3 className="font-display text-xl font-semibold text-foreground mb-2 text-center">Tu Outfit Ideal</h3>
+              {outfit.description && (
+                <p className="text-muted-foreground text-sm text-center mb-6 max-w-md mx-auto">{outfit.description}</p>
+              )}
+              <div className="grid sm:grid-cols-2 gap-3">
+                {outfit.pieces.map((p: any, i: number) => {
+                  const url = p.searchUrl || generateSearchUrl(p.piece, p.color);
+                  return (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-4 p-4 rounded-2xl bg-background shadow-soft hover:shadow-medium transition-all duration-300 group"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                        <Shirt className="w-5 h-5 text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
+                        <p className="text-xs text-muted-foreground">{p.color}</p>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent shrink-0 transition-colors" />
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -243,63 +318,6 @@ const Results = () => {
             </div>
           </section>
         )}
-
-        {/* Desigual Section */}
-        <section className="py-14 px-6 bg-muted/20">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Inspirado en</p>
-              <h3 className="font-display text-2xl font-semibold text-foreground mb-2">Desigual × Tu Paleta</h3>
-              <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                Búsquedas personalizadas en Desigual basadas en tu perfil cromático.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              {desigualSuggestions.map((s: any, i: number) => (
-                <a
-                  key={i}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-5 rounded-2xl bg-background shadow-soft hover:shadow-medium transition-all duration-300 group flex flex-col"
-                >
-                  <h4 className="text-sm font-semibold text-foreground mb-1">{s.item}</h4>
-                  <p className="text-xs text-muted-foreground mb-3 flex-1">{s.reason}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-accent group-hover:underline">
-                    Buscar en Desigual <ExternalLink className="w-3 h-3" />
-                  </span>
-                </a>
-              ))}
-            </div>
-
-            {desigualSuggestions.length === 0 && (
-              <div className="grid sm:grid-cols-2 gap-4">
-                {recommendedColors.slice(0, 4).map((color: any, i: number) => {
-                  const garments = ["hoodie", "camiseta", "chaqueta", "pantalón"];
-                  const url = generateDesigualUrl(color.name, garments[i] || "ropa");
-                  return (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-5 rounded-2xl bg-background shadow-soft hover:shadow-medium transition-all duration-300 group flex items-center gap-4"
-                    >
-                      <div className="w-10 h-10 rounded-xl shrink-0" style={{ backgroundColor: color.hex }} />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{color.name} {garments[i]}</p>
-                        <span className="inline-flex items-center gap-1 text-xs text-accent group-hover:underline">
-                          Ver en Desigual <ExternalLink className="w-3 h-3" />
-                        </span>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* CTA */}
         <section className="py-16 px-6 text-center relative overflow-hidden">
