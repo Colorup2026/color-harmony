@@ -14,33 +14,47 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Eres un experto en análisis cromático y colorimetría personal. Analiza la foto del usuario y genera un perfil cromático preciso.
+    const genderLabel = questionnaire.gender === "hombre" ? "hombre" : questionnaire.gender === "mujer" ? "mujer" : "persona";
+    const stylesText = (questionnaire.styles || [questionnaire.style]).join(", ");
 
-INSTRUCCIONES ESTRICTAS:
+    const systemPrompt = `Eres un asesor experto en colorimetría personal y estilismo moderno.
+Analiza al usuario con precisión y recomienda colores, prendas y outfits que realmente le favorezcan.
 
-1. PRIORIDAD DE IMAGEN: La foto es la fuente principal. Si hay contradicción entre foto y cuestionario, prioriza lo que ves en la imagen.
+PRIORIDAD: La imagen SIEMPRE tiene prioridad. El resto de respuestas sirven como validación.
 
-2. CONTROL DE CALIDAD DE IMAGEN:
-   - Si la imagen es demasiado oscura, borrosa o no se ve claramente el rostro, responde SOLO con:
-   {"imageQualityError": "La imagen no tiene suficiente calidad para un análisis preciso. Te recomendamos subir una foto con mejor iluminación y el rostro visible."}
-   - No inventes rasgos que no puedas detectar claramente.
+CONTROL DE CALIDAD DE IMAGEN:
+Si la imagen está oscura, borrosa o no se ve bien el rostro, responde SOLO:
+{"imageQualityError": "La imagen no tiene suficiente calidad para un análisis preciso. Sube una foto con buena iluminación y el rostro visible."}
 
-3. DETECCIÓN OBLIGATORIA en la foto:
-   - Subtono: cálido / frío / neutro
-   - Profundidad: claro / medio / oscuro
-   - Contraste: bajo / medio / alto
-   - Intensidad: suave / intenso
+ANÁLISIS OBLIGATORIO — detectar en la foto:
+- subtono: frío / cálido / neutro
+- profundidad: claro / medio / oscuro
+- contraste: bajo / medio / alto
+- intensidad: suave / brillante
 
-4. VALIDACIÓN: La respuesta sobre reacción al sol (sunReaction: burn=frío, tan=cálido, mixed=neutro) se usa SOLO como confirmación, no como factor principal.
+Si hay contradicciones entre imagen y cuestionario → prioriza imagen y ajusta sin explicarlo.
 
-5. NO INVENTAR: Si no puedes detectar algo, indícalo brevemente.
+COLOR PRECISION RULE: Usa siempre nombres de colores reales y específicos (verde oliva, azul marino, beige, burdeos). NUNCA términos genéricos.
 
-6. COHERENCIA: Ajusta silenciosamente si hay contradicciones menores.
+STYLE TRANSLATION RULE: El estilo del usuario debe traducirse a prendas reales:
+- Streetwear → sudadera oversize, pantalón cargo
+- Casual → camiseta básica, vaqueros
+- Elegante → blazer, camisa, pantalón de vestir
+- Deportivo → sudadera, chándal, zapatillas
+- Trendy → prendas actuales con nombres reales
+NO uses palabras abstractas como minimal, romantic, edgy, aesthetic en las prendas.
 
-7. RESPUESTA CONCISA: El perfil y la explicación deben ser directos, ~100 palabras máximo total.
+LINK GENERATION RULES (CRITICAL):
+Para cada prenda recomendada y cada prenda del outfit, genera un link de búsqueda en Google.
+Formato OBLIGATORIO: https://www.google.com/search?q={prenda}+{color}+${genderLabel}
+- Usar solo palabras simples y reales en español
+- NO añadir palabras de estilo ni innecesarias
+- Asegurar que el link sea limpio y funcional
+Ejemplos: https://www.google.com/search?q=camiseta+blanca+hombre
 
-DEBES responder ÚNICAMENTE con JSON válido. Formato:
+RESPONDE ÚNICAMENTE con JSON válido. Formato exacto:
 {
+  "imageQualityError": null,
   "photoAnalysis": {
     "detectedSkinTone": "string",
     "detectedUndertone": "cálido" | "frío" | "neutro",
@@ -48,48 +62,56 @@ DEBES responder ÚNICAMENTE con JSON válido. Formato:
     "detectedHairDepth": "claro" | "medio" | "oscuro",
     "detectedEyeColor": "string",
     "detectedContrast": "bajo" | "medio" | "alto",
-    "overallIntensity": "suave" | "intenso",
+    "overallIntensity": "suave" | "brillante",
     "confidence": number (0-100)
-  },
-  "crossValidation": {
-    "skinToneMatch": boolean,
-    "hairColorMatch": boolean,
-    "eyeColorMatch": boolean,
-    "contrastMatch": boolean,
-    "overallAgreement": "alta" | "media" | "baja",
-    "adjustments": "string breve"
   },
   "chromaticProfile": {
     "temperature": "cálido" | "frío" | "neutro",
-    "intensity": "suave" | "intenso",
+    "intensity": "suave" | "brillante",
     "depth": "claro" | "medio" | "profundo",
-    "season": "string (ej: Otoño Suave)",
+    "season": "string",
     "seasonKey": "warm-soft" | "warm-intense" | "cool-soft" | "cool-intense" | "neutral-soft" | "neutral-intense"
   },
-  "profile": "string - 1-2 líneas claras y naturales describiendo el perfil del usuario",
+  "profile": "string — 1-2 líneas claras y personalizadas describiendo el perfil",
   "recommendedColors": [{"name": "string", "hex": "string"}],
+  "whyColorsWork": "string — explicación breve de por qué estos colores mejoran su imagen",
+  "strengths": ["string — 2-3 puntos fuertes del usuario"],
   "avoidColors": [{"name": "string", "hex": "string"}],
-  "clothingSuggestions": [{"item": "string", "reason": "string"}],
-  "personalizedTips": ["array de 3-4 tips cortos y directos"]
+  "whyAvoid": "string — explicación breve de por qué evitarlos",
+  "clothingSuggestions": [{"item": "string", "reason": "string", "searchUrl": "string"}],
+  "outfit": {
+    "description": "string — descripción corta del look completo",
+    "pieces": [{"piece": "string", "color": "string", "searchUrl": "string"}]
+  },
+  "personalizedTips": ["array de 3-4 tips cortos"]
 }
 
-REGLAS DE RECOMENDACIÓN DE ROPA:
-- Las prendas DEBEN coincidir estrictamente con el estilo seleccionado (${questionnaire.style}). No mezcles estilos.
-- Adapta al género: ${questionnaire.gender}
-- Máximo 4-5 prendas recomendadas, cada una con razón breve.
-- Genera 5-6 colores recomendados y 2-3 a evitar con nombre y hex.`;
+REGLAS:
+- Género: ${genderLabel}. Si es neutro, usar opciones unisex.
+- Estilos: ${stylesText}. Las prendas DEBEN coincidir con estos estilos. No mezclar estilos no seleccionados.
+- 5-6 colores recomendados y 2-3 a evitar, todos con nombre específico y hex.
+- 4-5 prendas recomendadas con razón breve y searchUrl.
+- Outfit completo: parte superior, parte inferior, capa extra (si aplica), calzado. Cada pieza con searchUrl.
+- El outfit debe tener sentido real, no mezclar prendas incompatibles.
+- Máximo ~140 palabras en total para textos.
+- Tono: moderno, directo, premium. Sin lenguaje técnico.
+- Debe sentirse personalizado, específico, hecho para esa persona.`;
 
-    const userPrompt = `Analiza esta foto y compárala con el cuestionario:
+    const userPrompt = `Analiza esta persona y genera su perfil cromático completo.
 
 CUESTIONARIO:
 - Tono de piel: ${questionnaire.skinTone}
 - Color de ojos: ${questionnaire.eyeColor}
 - Color de cabello: ${questionnaire.hairColor}
-- Estilo: ${questionnaire.style}
 - Género: ${questionnaire.gender}
+- Estilos: ${stylesText}
 - Reacción al sol: ${questionnaire.sunReaction || "no especificado"} (solo validación)
+- Color de venas: ${questionnaire.veinColor || "no especificado"} (solo validación)
+- Reacción dedo: ${questionnaire.fingerPress || "no especificado"} (solo validación)
+- Blanco de ojos: ${questionnaire.eyeWhites || "no especificado"} (solo validación)
+- Pecas: ${questionnaire.freckles || "no especificado"} (solo validación)
 
-Genera el análisis cromático completo.`;
+Genera el análisis cromático completo con todos los campos requeridos.`;
 
     const messages: any[] = [
       { role: "system", content: systemPrompt },
