@@ -109,6 +109,7 @@ const Results = () => {
   }
 
   const profileText = aiData?.profile || `Un perfil ${result.profile.temperature}, ${result.profile.intensity} y ${result.profile.depth}.`;
+  const paletteHighlight = aiData?.paletteHighlight || null;
   const recommendedColors = aiData?.recommendedColors?.length ? aiData.recommendedColors : result.recommendedColors;
   const avoidColors = aiData?.avoidColors?.length ? aiData.avoidColors : result.avoidColors;
   const whyColorsWork = aiData?.whyColorsWork || "";
@@ -118,11 +119,17 @@ const Results = () => {
   const outfit = aiData?.outfit || null;
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
 
-  const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "persona";
+  const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "unisex";
 
-  const generateSearchUrl = (garment: string, color: string) => {
-    const query = encodeURIComponent(`${garment} ${color} ${genderLabel}`);
-    return `https://www.google.com/search?q=${query}`;
+  const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const buildSearchUrl = (item: string, color: string, suffix: "ropa" | "outfit") => {
+    const q = stripAccents(`${item} ${color} ${genderLabel} ${suffix}`)
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\s/g, "%20");
+    return `https://www.google.com/search?q=${q}`;
   };
 
   return (
