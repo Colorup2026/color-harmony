@@ -250,7 +250,9 @@ const Results = () => {
               <p className="text-muted-foreground text-xs text-center mb-6">Según tu paleta y estilo</p>
               <div className="space-y-3">
                 {clothingSuggestions.slice(0, 5).map((s: any, i: number) => {
-                  const url = s.searchUrl || generateSearchUrl(s.item, recommendedColors[i]?.name || "");
+                  const color = recommendedColors[i]?.name || recommendedColors[0]?.name || "";
+                  const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
+                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
                   return (
                     <a
                       key={i}
