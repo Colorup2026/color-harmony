@@ -14,7 +14,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const genderLabel = questionnaire.gender === "hombre" ? "hombre" : questionnaire.gender === "mujer" ? "mujer" : "persona";
+    const genderLabel = questionnaire.gender === "hombre" ? "hombre" : questionnaire.gender === "mujer" ? "mujer" : "unisex";
     const stylesText = (questionnaire.styles || [questionnaire.style]).join(", ");
 
     const systemPrompt = `Eres un asesor experto en colorimetría personal y estilismo moderno.
