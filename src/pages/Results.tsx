@@ -254,21 +254,28 @@ const Results = () => {
                   const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
                   const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
                   return (
-                    <a
+                    <div
                       key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft hover:shadow-medium transition-all duration-300 group animate-fade-in-up"
+                      className="p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up"
                       style={{ animationDelay: `${i * 0.08}s` }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{s.item}</p>
-                        <p className="text-xs text-muted-foreground">{s.reason}</p>
+                      <div className="flex items-start gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">{s.item}</p>
+                          <p className="text-xs text-muted-foreground">{s.reason}</p>
+                        </div>
                       </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent mt-1 shrink-0 transition-colors" />
-                    </a>
+                      <div className="flex gap-2 mt-3 pl-4">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
+                          Buscar prenda <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <span className="text-muted-foreground/40 text-[11px]">·</span>
+                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
+                          Ver outfits <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
