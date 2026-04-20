@@ -293,24 +293,29 @@ const Results = () => {
               )}
               <div className="grid sm:grid-cols-2 gap-3">
                 {outfit.pieces.map((p: any, i: number) => {
-                  const url = p.searchUrl || generateSearchUrl(p.piece, p.color);
+                  const url = p.searchUrl || buildSearchUrl(p.piece, p.color, "ropa");
+                  const altUrl = p.outfitUrl || buildSearchUrl(p.piece, p.color, "outfit");
                   return (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-4 rounded-2xl bg-background shadow-soft hover:shadow-medium transition-all duration-300 group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                        <Shirt className="w-5 h-5 text-accent" />
+                    <div key={i} className="p-4 rounded-2xl bg-background shadow-soft">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                          <Shirt className="w-5 h-5 text-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
+                          <p className="text-xs text-muted-foreground">{p.color}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
-                        <p className="text-xs text-muted-foreground">{p.color}</p>
+                      <div className="flex gap-2 mt-3">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
+                          Buscar prenda <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <span className="text-muted-foreground/40 text-[11px]">·</span>
+                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
+                          Ver outfits <ExternalLink className="w-3 h-3" />
+                        </a>
                       </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent shrink-0 transition-colors" />
-                    </a>
+                    </div>
                   );
                 })}
               </div>
