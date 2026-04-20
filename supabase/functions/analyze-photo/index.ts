@@ -211,6 +211,40 @@ Genera el análisis cromático completo con todos los campos requeridos.`;
       throw new Error("Failed to parse AI analysis");
     }
 
+    // Defensive URL sanitizer: enforce %20, lowercase, no accents, no markdown
+    const stripAccents = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const cleanQuery = (s: string) =>
+      stripAccents(String(s || ""))
+        .toLowerCase()
+        .replace(/[\[\]\(\)]/g, "")
+        .replace(/[^\w\s%-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const buildUrl = (item: string, color: string, suffix: "ropa" | "outfit") => {
+      const q = cleanQuery(`${item} ${color} ${genderLabel} ${suffix}`);
+      return `https://www.google.com/search?q=${q.replace(/\s/g, "%20")}`;
+    };
+
+    if (Array.isArray(parsed?.clothingSuggestions)) {
+      const colors = parsed.recommendedColors || [];
+      parsed.clothingSuggestions = parsed.clothingSuggestions.map((s: any, i: number) => {
+        const color = colors[i]?.name || colors[0]?.name || "";
+        return {
+          ...s,
+          searchUrl: buildUrl(s.item || "", color, "ropa"),
+          outfitUrl: buildUrl(s.item || "", color, "outfit"),
+        };
+      });
+    }
+    if (parsed?.outfit?.pieces?.length) {
+      parsed.outfit.pieces = parsed.outfit.pieces.map((p: any) => ({
+        ...p,
+        searchUrl: buildUrl(p.piece || "", p.color || "", "ropa"),
+        outfitUrl: buildUrl(p.piece || "", p.color || "", "outfit"),
+      }));
+    }
+
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
