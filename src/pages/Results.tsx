@@ -109,6 +109,7 @@ const Results = () => {
   }
 
   const profileText = aiData?.profile || `Un perfil ${result.profile.temperature}, ${result.profile.intensity} y ${result.profile.depth}.`;
+  const paletteHighlight = aiData?.paletteHighlight || null;
   const recommendedColors = aiData?.recommendedColors?.length ? aiData.recommendedColors : result.recommendedColors;
   const avoidColors = aiData?.avoidColors?.length ? aiData.avoidColors : result.avoidColors;
   const whyColorsWork = aiData?.whyColorsWork || "";
@@ -118,11 +119,17 @@ const Results = () => {
   const outfit = aiData?.outfit || null;
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
 
-  const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "persona";
+  const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "unisex";
 
-  const generateSearchUrl = (garment: string, color: string) => {
-    const query = encodeURIComponent(`${garment} ${color} ${genderLabel}`);
-    return `https://www.google.com/search?q=${query}`;
+  const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const buildSearchUrl = (item: string, color: string, suffix: "ropa" | "outfit") => {
+    const q = stripAccents(`${item} ${color} ${genderLabel} ${suffix}`)
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\s/g, "%20");
+    return `https://www.google.com/search?q=${q}`;
   };
 
   return (
@@ -172,6 +179,44 @@ const Results = () => {
             </div>
           </div>
         </section>
+
+        {/* Palette Highlight */}
+        {paletteHighlight && (
+          <section className="py-10 px-6">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-card shadow-medium border border-accent/10">
+                <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-accent/10 blur-3xl" />
+                <div className="relative z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 text-foreground text-[11px] font-medium mb-3">
+                    <Sparkles className="w-3 h-3" />
+                    Paleta identificada
+                  </div>
+                  <h3 className="font-display text-2xl sm:text-3xl font-semibold text-gradient-rainbow mb-3">
+                    {paletteHighlight.name}
+                  </h3>
+                  {paletteHighlight.description && (
+                    <p className="text-sm text-foreground/80 leading-relaxed mb-5">
+                      {paletteHighlight.description}
+                    </p>
+                  )}
+                  {Array.isArray(paletteHighlight.highlights) && paletteHighlight.highlights.length > 0 && (
+                    <ul className="space-y-2">
+                      {paletteHighlight.highlights.map((h: any, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                          <span className="text-accent mt-0.5">✔</span>
+                          <span>
+                            <span className="font-medium">{h.color}</span>
+                            <span className="text-muted-foreground"> → {h.effect}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Recommended Colors */}
         <section className="py-10 px-6">
@@ -243,23 +288,32 @@ const Results = () => {
               <p className="text-muted-foreground text-xs text-center mb-6">Según tu paleta y estilo</p>
               <div className="space-y-3">
                 {clothingSuggestions.slice(0, 5).map((s: any, i: number) => {
-                  const url = s.searchUrl || generateSearchUrl(s.item, recommendedColors[i]?.name || "");
+                  const color = recommendedColors[i]?.name || recommendedColors[0]?.name || "";
+                  const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
+                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
                   return (
-                    <a
+                    <div
                       key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft hover:shadow-medium transition-all duration-300 group animate-fade-in-up"
+                      className="p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up"
                       style={{ animationDelay: `${i * 0.08}s` }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{s.item}</p>
-                        <p className="text-xs text-muted-foreground">{s.reason}</p>
+                      <div className="flex items-start gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">{s.item}</p>
+                          <p className="text-xs text-muted-foreground">{s.reason}</p>
+                        </div>
                       </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent mt-1 shrink-0 transition-colors" />
-                    </a>
+                      <div className="flex gap-2 mt-3 pl-4">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
+                          Buscar prenda <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <span className="text-muted-foreground/40 text-[11px]">·</span>
+                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
+                          Ver outfits <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -277,24 +331,29 @@ const Results = () => {
               )}
               <div className="grid sm:grid-cols-2 gap-3">
                 {outfit.pieces.map((p: any, i: number) => {
-                  const url = p.searchUrl || generateSearchUrl(p.piece, p.color);
+                  const url = p.searchUrl || buildSearchUrl(p.piece, p.color, "ropa");
+                  const altUrl = p.outfitUrl || buildSearchUrl(p.piece, p.color, "outfit");
                   return (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-4 rounded-2xl bg-background shadow-soft hover:shadow-medium transition-all duration-300 group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                        <Shirt className="w-5 h-5 text-accent" />
+                    <div key={i} className="p-4 rounded-2xl bg-background shadow-soft">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                          <Shirt className="w-5 h-5 text-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
+                          <p className="text-xs text-muted-foreground">{p.color}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
-                        <p className="text-xs text-muted-foreground">{p.color}</p>
+                      <div className="flex gap-2 mt-3">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
+                          Buscar prenda <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <span className="text-muted-foreground/40 text-[11px]">·</span>
+                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
+                          Ver outfits <ExternalLink className="w-3 h-3" />
+                        </a>
                       </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-accent shrink-0 transition-colors" />
-                    </a>
+                    </div>
                   );
                 })}
               </div>

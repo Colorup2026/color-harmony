@@ -14,7 +14,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const genderLabel = questionnaire.gender === "hombre" ? "hombre" : questionnaire.gender === "mujer" ? "mujer" : "persona";
+    const genderLabel = questionnaire.gender === "hombre" ? "hombre" : questionnaire.gender === "mujer" ? "mujer" : "unisex";
     const stylesText = (questionnaire.styles || [questionnaire.style]).join(", ");
 
     const systemPrompt = `Eres un asesor experto en colorimetría personal y estilismo moderno.
@@ -51,15 +51,34 @@ Convierte los estilos seleccionados en prendas reales:
 - Edgy → chaqueta de cuero, botas
 NO uses palabras abstractas como minimal, romantic, edgy, aesthetic en las prendas ni en los links.
 
+QUERY NORMALIZATION (CRITICAL):
+Antes de generar links, normaliza las palabras:
+- minúsculas
+- singular
+- sin acentos (oliva, marron, burdeos)
+- palabras simples y reales
+
 LINK GENERATION RULES (CRITICAL):
-Para cada prenda recomendada y cada prenda del outfit, genera un link de búsqueda en Google.
-Formato OBLIGATORIO: https://www.google.com/search?q={prenda}+{color}+${genderLabel}+ropa
-- Usar solo palabras simples y reales en español
-- NO añadir palabras de estilo ni innecesarias
-- Asegurar que el link sea limpio y funcional
-Ejemplos:
-https://www.google.com/search?q=camiseta+blanca+hombre+ropa
-https://www.google.com/search?q=sudadera+gris+mujer+outfit
+Genera SOLO URLs planas y crudas (NO markdown, NO corchetes, NO paréntesis).
+Formato OBLIGATORIO con %20 (NUNCA usar "+"):
+https://www.google.com/search?q=camiseta%20blanca%20${genderLabel}%20ropa
+
+REGLAS:
+- reemplazar TODOS los espacios con "%20" (nunca "+")
+- NO usar acentos
+- solo minúsculas
+- palabras reales y simples
+- NO usar [ ] ni ( ) ni markdown
+- NO incluir nombres de estilos en el link
+
+SEARCH FALLBACK RULE:
+Para cada prenda, generar DOS links:
+1. searchUrl  → ...%20${genderLabel}%20ropa
+2. outfitUrl  → ...%20${genderLabel}%20outfit
+
+Ejemplos correctos:
+https://www.google.com/search?q=camiseta%20blanca%20hombre%20ropa
+https://www.google.com/search?q=camiseta%20blanca%20hombre%20outfit
 
 RESPONDE ÚNICAMENTE con JSON válido. Formato exacto:
 {
@@ -78,34 +97,40 @@ RESPONDE ÚNICAMENTE con JSON válido. Formato exacto:
     "temperature": "cálido" | "frío" | "neutro",
     "intensity": "suave" | "brillante",
     "depth": "claro" | "medio" | "profundo",
-    "season": "string",
+    "season": "string (ej: 'Primavera Cálida', 'Invierno Frío')",
     "seasonKey": "warm-soft" | "warm-intense" | "cool-soft" | "cool-intense" | "neutral-soft" | "neutral-intense"
   },
-  "profile": "string — 1-2 líneas claras y personalizadas describiendo el perfil cromático del usuario",
+  "profile": "string — 1-2 líneas claras y personalizadas",
+  "paletteHighlight": {
+    "name": "string — nombre de la paleta en mayúsculas (ej: 'PRIMAVERA CÁLIDA')",
+    "description": "string — 1-2 líneas conectando piel, ojos, pelo y contraste con la paleta",
+    "highlights": [
+      {"color": "string (ej: 'Verde oliva')", "effect": "string (ej: 'resalta tu tono natural')"}
+    ]
+  },
   "recommendedColors": [{"name": "string", "hex": "string"}],
-  "whyColorsWork": "string — explicación conectando directamente con los rasgos del usuario (piel, ojos, pelo, contraste). Debe ser personalizado, natural, no técnico. Ejemplo: 'Tienes un subtono cálido con ojos miel y cabello castaño, lo que hace que tonos como el verde oliva o el beige potencien tu piel y te den un aspecto más equilibrado y luminoso.'",
-  "strengths": ["string — 2-3 puntos fuertes del usuario"],
+  "whyColorsWork": "string — explicación conectando con piel, ojos, pelo y contraste del usuario. Natural, no técnico.",
+  "strengths": ["string — 2-3 puntos fuertes"],
   "avoidColors": [{"name": "string", "hex": "string"}],
-  "whyAvoid": "string — explicación breve y clara de por qué evitarlos, conectando con los rasgos",
-  "clothingSuggestions": [{"item": "string", "reason": "string", "searchUrl": "string"}],
+  "whyAvoid": "string — explicación breve y clara",
+  "clothingSuggestions": [{"item": "string", "reason": "string", "searchUrl": "string", "outfitUrl": "string"}],
   "outfit": {
     "description": "string — descripción corta del look completo",
-    "pieces": [{"piece": "string", "color": "string", "searchUrl": "string"}]
+    "pieces": [{"piece": "string", "color": "string", "searchUrl": "string", "outfitUrl": "string"}]
   },
   "personalizedTips": ["array de 3-4 tips cortos"]
 }
 
 REGLAS:
-- Género: ${genderLabel}. Si es neutro, usar opciones unisex.
-- Estilos: ${stylesText}. Las prendas DEBEN coincidir con estos estilos. No mezclar estilos no seleccionados.
-- 5-6 colores recomendados y 2-3 a evitar, todos con nombre específico y hex.
-- 4-5 prendas recomendadas con razón breve y searchUrl.
-- Outfit completo: parte superior, parte inferior, capa extra (si aplica), calzado. Cada pieza con searchUrl.
-- El outfit debe tener sentido real, no mezclar prendas incompatibles.
-- whyColorsWork DEBE mencionar piel, ojos, pelo y contraste del usuario. Debe sentirse personal.
-- Máximo ~140 palabras en total para textos.
+- Género: ${genderLabel}. Si es unisex, usar prendas neutras.
+- Estilos: ${stylesText}. Las prendas DEBEN coincidir con estos estilos.
+- 5-6 colores recomendados, 2-3 a evitar (todos con nombre real y hex).
+- 4-5 prendas con razón breve, searchUrl Y outfitUrl.
+- paletteHighlight: 3-5 colores destacados con su efecto en la persona.
+- Outfit completo: parte superior, parte inferior, capa extra (si aplica), calzado. Cada pieza con searchUrl Y outfitUrl.
+- whyColorsWork DEBE mencionar piel, ojos, pelo y contraste.
+- Máximo ~140 palabras totales en textos.
 - Tono: moderno, directo, premium. Sin lenguaje técnico.
-- Debe sentirse personalizado, específico, hecho para esa persona.
 - Debe parecer una recomendación real de un estilista profesional.`;
 
     const userPrompt = `Analiza esta persona y genera su perfil cromático completo.
@@ -184,6 +209,40 @@ Genera el análisis cromático completo con todos los campos requeridos.`;
     } catch {
       console.error("Failed to parse AI response:", content);
       throw new Error("Failed to parse AI analysis");
+    }
+
+    // Defensive URL sanitizer: enforce %20, lowercase, no accents, no markdown
+    const stripAccents = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const cleanQuery = (s: string) =>
+      stripAccents(String(s || ""))
+        .toLowerCase()
+        .replace(/[\[\]\(\)]/g, "")
+        .replace(/[^\w\s%-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const buildUrl = (item: string, color: string, suffix: "ropa" | "outfit") => {
+      const q = cleanQuery(`${item} ${color} ${genderLabel} ${suffix}`);
+      return `https://www.google.com/search?q=${q.replace(/\s/g, "%20")}`;
+    };
+
+    if (Array.isArray(parsed?.clothingSuggestions)) {
+      const colors = parsed.recommendedColors || [];
+      parsed.clothingSuggestions = parsed.clothingSuggestions.map((s: any, i: number) => {
+        const color = colors[i]?.name || colors[0]?.name || "";
+        return {
+          ...s,
+          searchUrl: buildUrl(s.item || "", color, "ropa"),
+          outfitUrl: buildUrl(s.item || "", color, "outfit"),
+        };
+      });
+    }
+    if (parsed?.outfit?.pieces?.length) {
+      parsed.outfit.pieces = parsed.outfit.pieces.map((p: any) => ({
+        ...p,
+        searchUrl: buildUrl(p.piece || "", p.color || "", "ropa"),
+        outfitUrl: buildUrl(p.piece || "", p.color || "", "outfit"),
+      }));
     }
 
     return new Response(JSON.stringify(parsed), {
