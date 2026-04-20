@@ -180,6 +180,44 @@ const Results = () => {
           </div>
         </section>
 
+        {/* Palette Highlight */}
+        {paletteHighlight && (
+          <section className="py-10 px-6">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-card shadow-medium border border-accent/10">
+                <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-accent/10 blur-3xl" />
+                <div className="relative z-10">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 text-foreground text-[11px] font-medium mb-3">
+                    <Sparkles className="w-3 h-3" />
+                    Paleta identificada
+                  </div>
+                  <h3 className="font-display text-2xl sm:text-3xl font-semibold text-gradient-rainbow mb-3">
+                    {paletteHighlight.name}
+                  </h3>
+                  {paletteHighlight.description && (
+                    <p className="text-sm text-foreground/80 leading-relaxed mb-5">
+                      {paletteHighlight.description}
+                    </p>
+                  )}
+                  {Array.isArray(paletteHighlight.highlights) && paletteHighlight.highlights.length > 0 && (
+                    <ul className="space-y-2">
+                      {paletteHighlight.highlights.map((h: any, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                          <span className="text-accent mt-0.5">✔</span>
+                          <span>
+                            <span className="font-medium">{h.color}</span>
+                            <span className="text-muted-foreground"> → {h.effect}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Recommended Colors */}
         <section className="py-10 px-6">
           <div className="max-w-2xl mx-auto">
