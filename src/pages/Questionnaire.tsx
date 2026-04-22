@@ -11,6 +11,7 @@ interface FormData {
   sunReaction: string;
   eyeWhites: string;
   freckles: string;
+  veinColor: string;
   hairColor: string;
   eyeColor: string;
   gender: string;
@@ -91,7 +92,14 @@ const frecklesOptions = [
   { id: "no", label: "No tengo pecas", visual: "⬜" },
 ];
 
-const totalSteps = 12;
+const veinColorOptions = [
+  { id: "warm", label: "Verdes", hint: "Suele indicar subtono cálido", visual: "🟢" },
+  { id: "cool", label: "Azules o moradas", hint: "Suele indicar subtono frío", visual: "🔵" },
+  { id: "neutral", label: "Mezcla de ambas", hint: "Suele indicar subtono neutro", visual: "🟣" },
+  { id: "unknown", label: "No lo sé", hint: "Lo determinaremos por la imagen", visual: "🤷" },
+];
+
+const totalSteps = 13;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
@@ -104,6 +112,7 @@ const Questionnaire = () => {
     sunReaction: "",
     eyeWhites: "",
     freckles: "",
+    veinColor: "",
     hairColor: "",
     eyeColor: "",
     gender: "",
@@ -126,8 +135,9 @@ const Questionnaire = () => {
       case 7: return formData.sunReaction !== "";
       case 8: return formData.eyeWhites !== "";
       case 9: return formData.freckles !== "";
-      case 10: return formData.photo !== null && formData.photoConsent;
-      case 11: return true;
+      case 10: return formData.veinColor !== "";
+      case 11: return formData.photo !== null && formData.photoConsent;
+      case 12: return true;
       default: return false;
     }
   }, [step, formData]);
@@ -136,7 +146,9 @@ const Questionnaire = () => {
     if (step < totalSteps - 1) setStep(step + 1);
     else {
       let undertone = "neutral";
-      if (formData.sunReaction === "burn") undertone = "cool";
+      if (formData.veinColor === "warm") undertone = "warm";
+      else if (formData.veinColor === "cool") undertone = "cool";
+      else if (formData.sunReaction === "burn") undertone = "cool";
       else if (formData.sunReaction === "tan") undertone = "warm";
 
       navigate("/results", {
@@ -156,6 +168,7 @@ const Questionnaire = () => {
           sunReaction: formData.sunReaction,
           eyeWhites: formData.eyeWhites,
           freckles: formData.freckles,
+          veinColor: formData.veinColor,
         },
       });
     }
@@ -347,6 +360,8 @@ const Questionnaire = () => {
       case 9:
         return <div className="animate-fade-in-up"><OptionList items={frecklesOptions} selected={formData.freckles} onSelect={(id) => setFormData({ ...formData, freckles: id })} /></div>;
       case 10:
+        return <div className="animate-fade-in-up"><OptionList items={veinColorOptions} selected={formData.veinColor} onSelect={(id) => setFormData({ ...formData, veinColor: id })} /></div>;
+      case 11:
         return (
           <div className="max-w-sm mx-auto text-center animate-fade-in-up">
             <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto leading-relaxed">
@@ -387,7 +402,7 @@ const Questionnaire = () => {
             </label>
           </div>
         );
-      case 11:
+      case 12:
         return (
           <div className="max-w-md mx-auto animate-fade-in-up text-center">
             <div className="p-6 rounded-2xl bg-gradient-card shadow-soft mb-6">
@@ -424,6 +439,7 @@ const Questionnaire = () => {
     "¿Cómo reacciona tu piel al sol?",
     "¿Cómo es el blanco de tus ojos?",
     "¿Tienes pecas?",
+    "¿De qué color son tus venas?",
     "Sube una foto tuya",
     "Revisa tu perfil",
   ];
@@ -439,6 +455,7 @@ const Questionnaire = () => {
     "Nos ayuda a confirmar tu subtono",
     "Observa el color del blanco de tus ojos bajo luz natural",
     "Las pecas pueden indicar sensibilidad al sol",
+    "Mira el interior de tu muñeca con luz natural",
     "Nuestra IA analizará tus rasgos para un resultado preciso",
     "Confirma tus datos antes de obtener el análisis",
   ];
