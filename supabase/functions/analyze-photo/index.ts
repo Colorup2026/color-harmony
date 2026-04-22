@@ -182,15 +182,17 @@ REGLAS:
 CUESTIONARIO:
 - Género: ${questionnaire.gender}
 - Tono de piel: ${questionnaire.skinTone}
+- Subtono indicado: ${questionnaire.undertone || "no especificado"}
 - Color de ojos: ${questionnaire.eyeColor}
 - Color de cabello: ${questionnaire.hairColor}
 - Contraste visual: ${questionnaire.contrast || "no especificado"}
 - Estilos seleccionados: ${stylesText}
-- Reacción al sol: ${questionnaire.sunReaction || "no especificado"} (solo validación)
-- Blanco de los ojos: ${questionnaire.eyeWhites || "no especificado"} (solo validación)
-- Pecas: ${questionnaire.freckles || "no especificado"} (solo validación)
+- Reacción al sol: ${questionnaire.sunReaction || "no especificado"} (validación)
+- Color de venas: ${questionnaire.veinColor || "no lo sé"} (validación secundaria, ignorar si "no lo sé")
+- Blanco de los ojos: ${questionnaire.eyeWhites || "no especificado"} (validación)
+- Pecas: ${questionnaire.freckles || "no especificado"} (validación)
 
-Genera el análisis cromático completo siguiendo la estructura indicada. Respeta el género y los estilos del usuario en TODAS las prendas y outfits.`;
+Sigue el proceso secuencial de CONSISTENCY RULE. Genera el análisis cromático completo respetando género y estilos en TODAS las prendas.`;
 
     const messages: any[] = [
       { role: "system", content: systemPrompt },
