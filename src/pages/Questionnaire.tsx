@@ -360,6 +360,8 @@ const Questionnaire = () => {
       case 9:
         return <div className="animate-fade-in-up"><OptionList items={frecklesOptions} selected={formData.freckles} onSelect={(id) => setFormData({ ...formData, freckles: id })} /></div>;
       case 10:
+        return <div className="animate-fade-in-up"><OptionList items={veinColorOptions} selected={formData.veinColor} onSelect={(id) => setFormData({ ...formData, veinColor: id })} /></div>;
+      case 11:
         return (
           <div className="max-w-sm mx-auto text-center animate-fade-in-up">
             <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto leading-relaxed">
