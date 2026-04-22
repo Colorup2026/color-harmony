@@ -136,18 +136,17 @@ REGLAS:
     const userPrompt = `Analiza esta persona y genera su perfil cromático completo.
 
 CUESTIONARIO:
+- Género: ${questionnaire.gender}
 - Tono de piel: ${questionnaire.skinTone}
 - Color de ojos: ${questionnaire.eyeColor}
 - Color de cabello: ${questionnaire.hairColor}
-- Género: ${questionnaire.gender}
-- Estilos: ${stylesText}
+- Contraste visual: ${questionnaire.contrast || "no especificado"}
+- Estilos seleccionados: ${stylesText}
 - Reacción al sol: ${questionnaire.sunReaction || "no especificado"} (solo validación)
-- Color de venas: ${questionnaire.veinColor || "no especificado"} (solo validación)
-- Reacción dedo: ${questionnaire.fingerPress || "no especificado"} (solo validación)
-- Blanco de ojos: ${questionnaire.eyeWhites || "no especificado"} (solo validación)
+- Blanco de los ojos: ${questionnaire.eyeWhites || "no especificado"} (solo validación)
 - Pecas: ${questionnaire.freckles || "no especificado"} (solo validación)
 
-Genera el análisis cromático completo con todos los campos requeridos.`;
+Genera el análisis cromático completo siguiendo la estructura indicada. Respeta el género y los estilos del usuario en TODAS las prendas y outfits.`;
 
     const messages: any[] = [
       { role: "system", content: systemPrompt },
