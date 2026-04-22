@@ -11,6 +11,7 @@ interface FormData {
   sunReaction: string;
   eyeWhites: string;
   freckles: string;
+  veinColor: string;
   hairColor: string;
   eyeColor: string;
   gender: string;
