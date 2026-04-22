@@ -92,7 +92,14 @@ const frecklesOptions = [
   { id: "no", label: "No tengo pecas", visual: "⬜" },
 ];
 
-const totalSteps = 12;
+const veinColorOptions = [
+  { id: "warm", label: "Verdes", hint: "Suele indicar subtono cálido", visual: "🟢" },
+  { id: "cool", label: "Azules o moradas", hint: "Suele indicar subtono frío", visual: "🔵" },
+  { id: "neutral", label: "Mezcla de ambas", hint: "Suele indicar subtono neutro", visual: "🟣" },
+  { id: "unknown", label: "No lo sé", hint: "Lo determinaremos por la imagen", visual: "🤷" },
+];
+
+const totalSteps = 13;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
