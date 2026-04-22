@@ -146,7 +146,9 @@ const Questionnaire = () => {
     if (step < totalSteps - 1) setStep(step + 1);
     else {
       let undertone = "neutral";
-      if (formData.sunReaction === "burn") undertone = "cool";
+      if (formData.veinColor === "warm") undertone = "warm";
+      else if (formData.veinColor === "cool") undertone = "cool";
+      else if (formData.sunReaction === "burn") undertone = "cool";
       else if (formData.sunReaction === "tan") undertone = "warm";
 
       navigate("/results", {
@@ -166,6 +168,7 @@ const Questionnaire = () => {
           sunReaction: formData.sunReaction,
           eyeWhites: formData.eyeWhites,
           freckles: formData.freckles,
+          veinColor: formData.veinColor,
         },
       });
     }
