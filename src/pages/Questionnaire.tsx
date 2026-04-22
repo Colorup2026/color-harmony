@@ -135,8 +135,9 @@ const Questionnaire = () => {
       case 7: return formData.sunReaction !== "";
       case 8: return formData.eyeWhites !== "";
       case 9: return formData.freckles !== "";
-      case 10: return formData.photo !== null && formData.photoConsent;
-      case 11: return true;
+      case 10: return formData.veinColor !== "";
+      case 11: return formData.photo !== null && formData.photoConsent;
+      case 12: return true;
       default: return false;
     }
   }, [step, formData]);
