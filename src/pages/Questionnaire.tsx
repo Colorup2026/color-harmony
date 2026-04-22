@@ -439,6 +439,7 @@ const Questionnaire = () => {
     "¿Cómo reacciona tu piel al sol?",
     "¿Cómo es el blanco de tus ojos?",
     "¿Tienes pecas?",
+    "¿De qué color son tus venas?",
     "Sube una foto tuya",
     "Revisa tu perfil",
   ];
@@ -454,6 +455,7 @@ const Questionnaire = () => {
     "Nos ayuda a confirmar tu subtono",
     "Observa el color del blanco de tus ojos bajo luz natural",
     "Las pecas pueden indicar sensibilidad al sol",
+    "Mira el interior de tu muñeca con luz natural",
     "Nuestra IA analizará tus rasgos para un resultado preciso",
     "Confirma tus datos antes de obtener el análisis",
   ];
