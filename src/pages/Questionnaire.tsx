@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, ArrowRight, Upload, Sparkles, Camera, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Camera } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -9,8 +9,6 @@ interface FormData {
   photo: string | null;
   skinTone: string;
   sunReaction: string;
-  veinColor: string;
-  fingerPress: string;
   eyeWhites: string;
   freckles: string;
   hairColor: string;
@@ -44,7 +42,8 @@ const eyeColors = [
 ];
 
 const hairColors = [
-  { id: "blonde", label: "Rubio", color: "#E8D5A3" },
+  { id: "blonde", label: "Rubio Claro", color: "#E8D5A3" },
+  { id: "dark-blonde", label: "Rubio Oscuro", color: "#B89968" },
   { id: "strawberry", label: "Rubio Fresa", color: "#C78C6C" },
   { id: "light-brown", label: "Castaño Claro", color: "#A0785A" },
   { id: "dark-brown", label: "Castaño Oscuro", color: "#5C4033" },
@@ -68,22 +67,16 @@ const styleOptions = [
   { id: "trendy", label: "Trendy / Fashion", emoji: "💎", desc: "A la última tendencia" },
 ];
 
+const contrastOptions = [
+  { id: "alto", label: "Alto", hint: "Gran diferencia entre piel, ojos y cabello (ej. piel clara + cabello negro)", visual: "⚫⚪" },
+  { id: "medio", label: "Medio", hint: "Diferencia equilibrada entre tus rasgos", visual: "🌗" },
+  { id: "bajo", label: "Bajo", hint: "Tus rasgos tienen tonos similares (ej. piel y cabello claros)", visual: "⚪⚪" },
+];
+
 const sunReactionOptions = [
   { id: "burn", label: "Me quemo fácilmente y me cuesta broncearme", hint: "Suele indicar subtono frío", visual: "☀️🔥" },
   { id: "tan", label: "Me bronceo con facilidad y rara vez me quemo", hint: "Suele indicar subtono cálido", visual: "☀️✨" },
   { id: "mixed", label: "A veces me quemo y a veces me bronceo / No estoy seguro/a", hint: "Puede indicar subtono neutro", visual: "☀️🤷" },
-];
-
-const veinColorOptions = [
-  { id: "blue-purple", label: "Azuladas / Moradas", hint: "Subtono frío", visual: "💜" },
-  { id: "green", label: "Verdosas", hint: "Subtono cálido", visual: "💚" },
-  { id: "mixed", label: "Mezcla de azul y verde", hint: "Subtono neutro", visual: "🔵🟢" },
-];
-
-const fingerPressOptions = [
-  { id: "pink", label: "Rosado / Rojizo", hint: "Subtono frío", visual: "🩷" },
-  { id: "yellow", label: "Amarillento / Melocotón", hint: "Subtono cálido", visual: "🟡" },
-  { id: "neutral", label: "No estoy seguro/a", hint: "Subtono neutro", visual: "⚪" },
 ];
 
 const eyeWhitesOptions = [
@@ -98,7 +91,7 @@ const frecklesOptions = [
   { id: "no", label: "No tengo pecas", visual: "⬜" },
 ];
 
-const totalSteps = 13;
+const totalSteps = 12;
 
 const Questionnaire = () => {
   const navigate = useNavigate();
@@ -109,8 +102,6 @@ const Questionnaire = () => {
     photo: null,
     skinTone: "",
     sunReaction: "",
-    veinColor: "",
-    fingerPress: "",
     eyeWhites: "",
     freckles: "",
     hairColor: "",
@@ -130,14 +121,13 @@ const Questionnaire = () => {
       case 2: return formData.skinTone !== "";
       case 3: return formData.eyeColor !== "";
       case 4: return formData.hairColor !== "";
-      case 5: return formData.styles.length >= 1;
-      case 6: return formData.sunReaction !== "";
-      case 7: return formData.veinColor !== "";
-      case 8: return formData.fingerPress !== "";
-      case 9: return formData.eyeWhites !== "";
-      case 10: return formData.freckles !== "";
-      case 11: return formData.photo !== null && formData.photoConsent;
-      case 12: return true;
+      case 5: return formData.contrast !== "";
+      case 6: return formData.styles.length >= 1;
+      case 7: return formData.sunReaction !== "";
+      case 8: return formData.eyeWhites !== "";
+      case 9: return formData.freckles !== "";
+      case 10: return formData.photo !== null && formData.photoConsent;
+      case 11: return true;
       default: return false;
     }
   }, [step, formData]);
@@ -162,10 +152,8 @@ const Questionnaire = () => {
           gender: formData.gender,
           styles: formData.styles,
           style: formData.styles[0] || "casual",
-          contrast: "medium",
+          contrast: formData.contrast,
           sunReaction: formData.sunReaction,
-          veinColor: formData.veinColor,
-          fingerPress: formData.fingerPress,
           eyeWhites: formData.eyeWhites,
           freckles: formData.freckles,
         },
@@ -328,6 +316,8 @@ const Questionnaire = () => {
       case 4:
         return <div className="animate-fade-in-up"><ColorOptionGrid items={hairColors} selected={formData.hairColor} onSelect={(id) => setFormData({ ...formData, hairColor: id })} /></div>;
       case 5:
+        return <div className="animate-fade-in-up"><OptionList items={contrastOptions} selected={formData.contrast} onSelect={(id) => setFormData({ ...formData, contrast: id })} /></div>;
+      case 6:
         return (
           <div className="animate-fade-in-up">
             <p className="text-xs text-muted-foreground text-center mb-4">Selecciona hasta 3 estilos ({formData.styles.length}/3)</p>
@@ -350,17 +340,13 @@ const Questionnaire = () => {
             </div>
           </div>
         );
-      case 6:
-        return <div className="animate-fade-in-up"><OptionList items={sunReactionOptions} selected={formData.sunReaction} onSelect={(id) => setFormData({ ...formData, sunReaction: id })} /></div>;
       case 7:
-        return <div className="animate-fade-in-up"><OptionList items={veinColorOptions} selected={formData.veinColor} onSelect={(id) => setFormData({ ...formData, veinColor: id })} /></div>;
+        return <div className="animate-fade-in-up"><OptionList items={sunReactionOptions} selected={formData.sunReaction} onSelect={(id) => setFormData({ ...formData, sunReaction: id })} /></div>;
       case 8:
-        return <div className="animate-fade-in-up"><OptionList items={fingerPressOptions} selected={formData.fingerPress} onSelect={(id) => setFormData({ ...formData, fingerPress: id })} /></div>;
-      case 9:
         return <div className="animate-fade-in-up"><OptionList items={eyeWhitesOptions} selected={formData.eyeWhites} onSelect={(id) => setFormData({ ...formData, eyeWhites: id })} /></div>;
-      case 10:
+      case 9:
         return <div className="animate-fade-in-up"><OptionList items={frecklesOptions} selected={formData.freckles} onSelect={(id) => setFormData({ ...formData, freckles: id })} /></div>;
-      case 11:
+      case 10:
         return (
           <div className="max-w-sm mx-auto text-center animate-fade-in-up">
             <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto leading-relaxed">
@@ -401,7 +387,7 @@ const Questionnaire = () => {
             </label>
           </div>
         );
-      case 12:
+      case 11:
         return (
           <div className="max-w-md mx-auto animate-fade-in-up text-center">
             <div className="p-6 rounded-2xl bg-gradient-card shadow-soft mb-6">
@@ -412,7 +398,8 @@ const Questionnaire = () => {
                 <div><span className="font-medium text-foreground">Piel:</span> {skinTones.find(s => s.id === formData.skinTone)?.label}</div>
                 <div><span className="font-medium text-foreground">Ojos:</span> {eyeColors.find(s => s.id === formData.eyeColor)?.label}</div>
                 <div><span className="font-medium text-foreground">Cabello:</span> {hairColors.find(s => s.id === formData.hairColor)?.label}</div>
-                <div><span className="font-medium text-foreground">Estilos:</span> {formData.styles.map(s => styleOptions.find(o => o.id === s)?.label).join(", ")}</div>
+                <div><span className="font-medium text-foreground">Contraste:</span> {contrastOptions.find(s => s.id === formData.contrast)?.label}</div>
+                <div className="col-span-2"><span className="font-medium text-foreground">Estilos:</span> {formData.styles.map(s => styleOptions.find(o => o.id === s)?.label).join(", ")}</div>
               </div>
               {formData.photo && (
                 <div className="mt-4">
@@ -432,10 +419,9 @@ const Questionnaire = () => {
     "¿Cuál es tu tono de piel?",
     "¿Cuál es tu color de ojos?",
     "¿Cuál es tu color de cabello?",
+    "¿Cuál es tu nivel de contraste?",
     "¿Cuáles son tus estilos?",
     "¿Cómo reacciona tu piel al sol?",
-    "¿De qué color son tus venas?",
-    "Si presionas tu dedo, ¿qué color ves?",
     "¿Cómo es el blanco de tus ojos?",
     "¿Tienes pecas?",
     "Sube una foto tuya",
@@ -448,10 +434,9 @@ const Questionnaire = () => {
     "Selecciona el que más se parezca al tuyo",
     "Selecciona tu color de ojos natural",
     "Elige el color más cercano al tuyo natural",
+    "Compara la diferencia entre tu piel, ojos y cabello",
     "Selecciona hasta 3 estilos que te representen",
     "Nos ayuda a confirmar tu subtono",
-    "Mira la parte interna de tu muñeca bajo luz natural",
-    "Presiona la yema de tu dedo y observa el color al soltar",
     "Observa el color del blanco de tus ojos bajo luz natural",
     "Las pecas pueden indicar sensibilidad al sol",
     "Nuestra IA analizará tus rasgos para un resultado preciso",
