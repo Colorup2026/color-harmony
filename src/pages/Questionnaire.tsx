@@ -112,6 +112,7 @@ const Questionnaire = () => {
     sunReaction: "",
     eyeWhites: "",
     freckles: "",
+    veinColor: "",
     hairColor: "",
     eyeColor: "",
     gender: "",
