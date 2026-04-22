@@ -402,7 +402,7 @@ const Questionnaire = () => {
             </label>
           </div>
         );
-      case 11:
+      case 12:
         return (
           <div className="max-w-md mx-auto animate-fade-in-up text-center">
             <div className="p-6 rounded-2xl bg-gradient-card shadow-soft mb-6">
