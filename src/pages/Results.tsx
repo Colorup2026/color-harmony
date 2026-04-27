@@ -4,16 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { analyzeUser, type UserProfile, type AIPhotoAnalysis } from "@/lib/colorAnalysis";
-import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink, Star, ShieldX, Shirt } from "lucide-react";
+import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink, Star, ShieldX, Shirt, CheckCircle2 } from "lucide-react";
+import { sendResultsEmail } from "@/lib/EmailService";
+import { useToast } from "@/hooks/use-toast";
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const formData = location.state as (UserProfile & { sunReaction?: string; styles?: string[]; veinColor?: string; fingerPress?: string; eyeWhites?: string; freckles?: string }) | null;
+  const { toast } = useToast();
+  const formData = location.state as (UserProfile & { name: string; email: string; sunReaction?: string; styles?: string[]; veinColor?: string; fingerPress?: string; eyeWhites?: string; freckles?: string }) | null;
   const [aiData, setAiData] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [result, setResult] = useState(() => formData ? analyzeUser(formData) : null);
+  
+  // Estados para el envío de email
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!formData) return;
@@ -109,15 +116,44 @@ const Results = () => {
   }
 
   const profileText = aiData?.profile || `Un perfil ${result.profile.temperature}, ${result.profile.intensity} y ${result.profile.depth}.`;
-  const paletteHighlight = aiData?.paletteHighlight || null;
   const recommendedColors = aiData?.recommendedColors?.length ? aiData.recommendedColors : result.recommendedColors;
   const avoidColors = aiData?.avoidColors?.length ? aiData.avoidColors : result.avoidColors;
-  const whyColorsWork = aiData?.whyColorsWork || "";
-  const strengths: string[] = aiData?.strengths || [];
-  const whyAvoid = aiData?.whyAvoid || "";
   const clothingSuggestions = aiData?.clothingSuggestions || [];
   const outfit = aiData?.outfit || null;
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
+
+  const handleSendEmail = async () => {
+    if (isSendingEmail || emailSent) return;
+    
+    setIsSendingEmail(true);
+    
+    const emailData = {
+      userName: formData.name,
+      userEmail: formData.email,
+      season: result.profile.season,
+      profileText: profileText,
+      palette: recommendedColors.slice(0, 6).map((c: any) => ({ name: c.name, hex: c.hex })),
+      clothingSuggestions: clothingSuggestions.slice(0, 5).map((s: any) => ({ item: s.item, reason: s.reason })),
+      tips: tips.slice(0, 4)
+    };
+
+    const res = await sendResultsEmail(emailData);
+    
+    setIsSendingEmail(false);
+    if (res.success) {
+      setEmailSent(true);
+      toast({
+        title: "¡Resultados enviados!",
+        description: `Hemos enviado el reporte a ${formData.email}`,
+      });
+    } else {
+      toast({
+        title: "Error al enviar",
+        description: "No pudimos enviar el correo. Por favor, inténtalo de nuevo más tarde.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "unisex";
 
@@ -180,44 +216,6 @@ const Results = () => {
           </div>
         </section>
 
-        {/* Palette Highlight */}
-        {paletteHighlight && (
-          <section className="py-10 px-6">
-            <div className="max-w-2xl mx-auto">
-              <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-card shadow-medium border border-accent/10">
-                <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-accent/10 blur-3xl" />
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 text-foreground text-[11px] font-medium mb-3">
-                    <Sparkles className="w-3 h-3" />
-                    Paleta identificada
-                  </div>
-                  <h3 className="font-display text-2xl sm:text-3xl font-semibold text-gradient-rainbow mb-3">
-                    {paletteHighlight.name}
-                  </h3>
-                  {paletteHighlight.description && (
-                    <p className="text-sm text-foreground/80 leading-relaxed mb-5">
-                      {paletteHighlight.description}
-                    </p>
-                  )}
-                  {Array.isArray(paletteHighlight.highlights) && paletteHighlight.highlights.length > 0 && (
-                    <ul className="space-y-2">
-                      {paletteHighlight.highlights.map((h: any, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                          <span className="text-accent mt-0.5">✔</span>
-                          <span>
-                            <span className="font-medium">{h.color}</span>
-                            <span className="text-muted-foreground"> → {h.effect}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Recommended Colors */}
         <section className="py-10 px-6">
           <div className="max-w-2xl mx-auto">
@@ -230,31 +228,8 @@ const Results = () => {
                 </div>
               ))}
             </div>
-            {whyColorsWork && (
-              <p className="text-muted-foreground text-sm text-center mt-6 max-w-lg mx-auto leading-relaxed">{whyColorsWork}</p>
-            )}
           </div>
         </section>
-
-        {/* Strengths */}
-        {strengths.length > 0 && (
-          <section className="py-8 px-6">
-            <div className="max-w-2xl mx-auto">
-              <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center flex items-center justify-center gap-2">
-                <Star className="w-5 h-5 text-accent" />
-                Puntos Fuertes
-              </h3>
-              <div className="space-y-2">
-                {strengths.map((s: string, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
-                    <p className="text-sm text-foreground">{s}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* Avoid Colors */}
         <section className="py-8 px-6">
@@ -271,13 +246,10 @@ const Results = () => {
                 </div>
               ))}
             </div>
-            {whyAvoid && (
-              <p className="text-muted-foreground text-xs text-center mt-4 max-w-md mx-auto leading-relaxed">{whyAvoid}</p>
-            )}
           </div>
         </section>
 
-        {/* Clothing Suggestions with links */}
+        {/* Clothing Suggestions */}
         {clothingSuggestions.length > 0 && (
           <section className="py-12 px-6">
             <div className="max-w-2xl mx-auto">
@@ -305,46 +277,6 @@ const Results = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3 pl-4">
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
-                          Buscar prenda <ExternalLink className="w-3 h-3" />
-                        </a>
-                        <span className="text-muted-foreground/40 text-[11px]">·</span>
-                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
-                          Ver outfits <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Outfit */}
-        {outfit && outfit.pieces?.length > 0 && (
-          <section className="py-12 px-6 bg-muted/20">
-            <div className="max-w-2xl mx-auto">
-              <h3 className="font-display text-xl font-semibold text-foreground mb-2 text-center">Tu Outfit Ideal</h3>
-              {outfit.description && (
-                <p className="text-muted-foreground text-sm text-center mb-6 max-w-md mx-auto">{outfit.description}</p>
-              )}
-              <div className="grid sm:grid-cols-2 gap-3">
-                {outfit.pieces.map((p: any, i: number) => {
-                  const url = p.searchUrl || buildSearchUrl(p.piece, p.color, "ropa");
-                  const altUrl = p.outfitUrl || buildSearchUrl(p.piece, p.color, "outfit");
-                  return (
-                    <div key={i} className="p-4 rounded-2xl bg-background shadow-soft">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                          <Shirt className="w-5 h-5 text-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{p.piece}</p>
-                          <p className="text-xs text-muted-foreground">{p.color}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-3">
                         <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
                           Buscar prenda <ExternalLink className="w-3 h-3" />
                         </a>
@@ -389,9 +321,31 @@ const Results = () => {
               Te enviaremos tu análisis cromático, paleta y recomendaciones a tu correo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-gradient-button text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-300 hover:scale-105">
-                <Mail className="w-4 h-4" />
-                Enviar Mis Resultados
+              <button 
+                onClick={handleSendEmail}
+                disabled={isSendingEmail || emailSent}
+                className={`inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-medium shadow-soft transition-all duration-300 hover:scale-105 ${
+                  emailSent 
+                    ? "bg-green-500 text-white cursor-default" 
+                    : "bg-gradient-button text-primary-foreground hover:shadow-medium"
+                }`}
+              >
+                {isSendingEmail ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : emailSent ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Enviado con éxito
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    Enviar Mis Resultados
+                  </>
+                )}
               </button>
               <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-accent transition-all duration-300">
                 <Share2 className="w-4 h-4" />
