@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { analyzeUser, type UserProfile, type AIPhotoAnalysis } from "@/lib/colorAnalysis";
-import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink, Star, ShieldX, Shirt, CheckCircle2 } from "lucide-react";
+import { Sparkles, Share2, Mail, ArrowRight, Loader2, ExternalLink, ShieldX, Shirt, CheckCircle2, Wand2 } from "lucide-react";
 import { sendResultsEmail } from "@/lib/EmailService";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,14 +17,12 @@ const Results = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [result, setResult] = useState(() => formData ? analyzeUser(formData) : null);
-  
-  // Estados para el envío de email
+
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!formData) return;
-
     const runAIAnalysis = async () => {
       setIsAnalyzing(true);
       setAnalysisError(null);
@@ -48,19 +46,14 @@ const Results = () => {
             },
           },
         });
-
         if (error) throw error;
-
         if (data?.imageQualityError) {
           setAnalysisError(data.imageQualityError);
           setResult(analyzeUser(formData));
         } else if (data && !data.error) {
           setAiData(data);
-          if (data.chromaticProfile) {
-            setResult(analyzeUser(formData, data as AIPhotoAnalysis));
-          }
+          if (data.chromaticProfile) setResult(analyzeUser(formData, data as AIPhotoAnalysis));
         } else {
-          console.warn("AI error, using local:", data?.error);
           setResult(analyzeUser(formData));
         }
       } catch (err) {
@@ -71,7 +64,6 @@ const Results = () => {
         setIsAnalyzing(false);
       }
     };
-
     runAIAnalysis();
   }, []);
 
@@ -82,7 +74,7 @@ const Results = () => {
         <div className="text-center pt-16">
           <h2 className="font-display text-2xl font-semibold text-foreground mb-4">Aún no hay resultados</h2>
           <p className="text-muted-foreground mb-6">¡Haz el análisis para descubrir tus colores!</p>
-          <button onClick={() => navigate("/questionnaire")} className="px-8 py-3 rounded-full bg-gradient-button text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all">
+          <button onClick={() => navigate("/questionnaire")} className="px-8 py-3 rounded-full bg-foreground text-background font-medium shadow-soft hover:shadow-medium transition-all">
             Comenzar
           </button>
         </div>
@@ -94,20 +86,22 @@ const Results = () => {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
         <Navbar />
-        <div className="text-center pt-16">
-          <div className="relative w-24 h-24 mx-auto mb-8">
-            <div className="absolute inset-0 rounded-full bg-gradient-button animate-pulse-soft" />
-            <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-accent animate-spin" />
+        <div className="text-center pt-16 px-6">
+          <div className="relative w-28 h-28 mx-auto mb-10">
+            <div className="absolute inset-0 rounded-full bg-gradient-accent blur-2xl opacity-60 animate-pulse-soft" />
+            <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center shadow-medium">
+              <Loader2 className="w-9 h-9 text-primary animate-spin" />
             </div>
           </div>
-          <h2 className="font-display text-2xl font-semibold text-foreground mb-3">Analizando tu perfil…</h2>
-          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-            Nuestra IA está estudiando tu foto y tus respuestas para darte el resultado más preciso.
+          <h2 className="font-display text-3xl font-medium text-foreground mb-3">
+            Analizando tu <span className="italic text-gradient-editorial">esencia</span>
+          </h2>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
+            Nuestra IA está leyendo tu rostro, tu luz y tus rasgos para construir una paleta hecha solo para ti.
           </p>
-          <div className="flex justify-center gap-1 mt-6">
+          <div className="flex justify-center gap-1.5 mt-8">
             {[0, 1, 2].map(i => (
-              <div key={i} className="w-2 h-2 rounded-full bg-accent animate-pulse-soft" style={{ animationDelay: `${i * 0.3}s` }} />
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" style={{ animationDelay: `${i * 0.3}s` }} />
             ))}
           </div>
         </div>
@@ -121,85 +115,75 @@ const Results = () => {
   const clothingSuggestions = aiData?.clothingSuggestions || [];
   const outfit = aiData?.outfit || null;
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
+  const paletteHighlight = aiData?.paletteHighlight;
+  const whyColorsWork = aiData?.whyColorsWork;
+  const strengths: string[] = aiData?.strengths || [];
+  const whyAvoid = aiData?.whyAvoid;
 
   const handleSendEmail = async () => {
     if (isSendingEmail || emailSent) return;
-    
     setIsSendingEmail(true);
-    
     const emailData = {
       userName: formData.name,
       userEmail: formData.email,
       season: result.profile.season,
-      profileText: profileText,
+      profileText,
       palette: recommendedColors.slice(0, 6).map((c: any) => ({ name: c.name, hex: c.hex })),
       clothingSuggestions: clothingSuggestions.slice(0, 5).map((s: any) => ({ item: s.item, reason: s.reason })),
-      tips: tips.slice(0, 4)
+      tips: tips.slice(0, 4),
     };
-
     const res = await sendResultsEmail(emailData);
-    
     setIsSendingEmail(false);
     if (res.success) {
       setEmailSent(true);
-      toast({
-        title: "¡Resultados enviados!",
-        description: `Hemos enviado el reporte a ${formData.email}`,
-      });
+      toast({ title: "¡Resultados enviados!", description: `Hemos enviado el reporte a ${formData.email}` });
     } else {
-      toast({
-        title: "Error al enviar",
-        description: "No pudimos enviar el correo. Por favor, inténtalo de nuevo más tarde.",
-        variant: "destructive"
-      });
+      toast({ title: "Error al enviar", description: "No pudimos enviar el correo. Inténtalo más tarde.", variant: "destructive" });
     }
   };
 
   const genderLabel = formData.gender === "hombre" ? "hombre" : formData.gender === "mujer" ? "mujer" : "unisex";
-
   const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const buildSearchUrl = (item: string, color: string, suffix: "ropa" | "outfit") => {
     const q = stripAccents(`${item} ${color} ${genderLabel} ${suffix}`)
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/\s/g, "%20");
+      .toLowerCase().replace(/[^\w\s-]/g, " ").replace(/\s+/g, " ").trim().replace(/\s/g, "%20");
     return `https://www.google.com/search?q=${q}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-16">
-        {/* Hero */}
-        <section className="py-16 md:py-20 text-center px-6 relative overflow-hidden">
-          <div className="absolute top-10 left-1/4 w-64 h-64 rounded-full bg-secondary/10 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-primary/8 blur-3xl" />
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-foreground text-sm mb-6">
-              <Sparkles className="w-4 h-4" />
+        {/* HERO — Editorial */}
+        <section className="relative py-20 md:py-28 text-center px-6 overflow-hidden bg-gradient-hero">
+          <div className="absolute top-10 left-1/4 w-72 h-72 rounded-full bg-accent/40 blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-secondary/30 blur-3xl" />
+          <div className="relative z-10 max-w-3xl mx-auto animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-xs uppercase tracking-[0.18em] text-foreground/70 mb-8">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
               Tu análisis está listo
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-foreground mb-4">
-              {formData.name}, eres
+            <p className="text-muted-foreground text-sm tracking-widest uppercase mb-3">{formData.name}, perteneces a</p>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium leading-[1.05]">
+              <span className="italic text-gradient-editorial">{result.profile.season}</span>
             </h1>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-gradient-rainbow mb-6">
-              {result.profile.season}
-            </h2>
-            {analysisError && (
-              <p className="mt-4 text-xs text-muted-foreground bg-background/80 px-4 py-2 rounded-xl inline-block">
-                {analysisError}
+            {paletteHighlight?.description && (
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-xl mx-auto mt-8">
+                {paletteHighlight.description}
               </p>
+            )}
+            {analysisError && (
+              <p className="mt-6 text-xs text-muted-foreground glass-card px-4 py-2 rounded-xl inline-block">{analysisError}</p>
             )}
           </div>
         </section>
 
-        {/* Profile */}
-        <section className="py-10 px-6">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-4 text-center">Perfil</h3>
-            <p className="text-muted-foreground text-sm text-center leading-relaxed mb-6 max-w-lg mx-auto">{profileText}</p>
+        {/* PROFILE CHIPS */}
+        <section className="py-12 px-6">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-muted-foreground text-base md:text-lg text-center leading-relaxed mb-8 max-w-xl mx-auto italic font-display">
+              "{profileText}"
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: "Temperatura", value: result.profile.temperature },
@@ -207,81 +191,131 @@ const Results = () => {
                 { label: "Profundidad", value: result.profile.depth },
                 { label: "Estación", value: result.profile.season },
               ].map((item) => (
-                <div key={item.label} className="p-4 rounded-2xl bg-background shadow-soft text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</p>
-                  <p className="text-sm font-semibold text-foreground capitalize">{item.value}</p>
+                <div key={item.label} className="p-5 rounded-2xl bg-gradient-card shadow-soft text-center border border-border/40">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">{item.label}</p>
+                  <p className="text-sm font-semibold text-foreground capitalize font-display">{item.value}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Recommended Colors */}
-        <section className="py-10 px-6">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-xl font-semibold text-foreground mb-6 text-center">Tu Paleta Ideal</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-              {recommendedColors.slice(0, 6).map((color: any, i: number) => (
-                <div key={i} className="group text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.06}s` }}>
-                  <div className="aspect-square rounded-2xl shadow-soft mb-2 transition-all duration-300 group-hover:shadow-medium group-hover:scale-105" style={{ backgroundColor: color.hex }} />
-                  <p className="text-[10px] text-muted-foreground leading-tight">{color.name}</p>
+        {/* PALETTE HIGHLIGHT */}
+        {paletteHighlight?.highlights?.length > 0 && (
+          <section className="py-14 px-6">
+            <div className="max-w-3xl mx-auto">
+              <div className="text-center mb-10">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Paleta identificada</span>
+                <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3">
+                  {paletteHighlight.name || result.profile.season}
+                </h2>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {paletteHighlight.highlights.slice(0, 6).map((h: any, i: number) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl glass-card animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                    <div className="w-12 h-12 rounded-xl shadow-soft shrink-0" style={{ backgroundColor: recommendedColors[i]?.hex || "hsl(var(--primary))" }} />
+                    <div>
+                      <p className="font-display text-base text-foreground">{h.color}</p>
+                      <p className="text-xs text-muted-foreground">{h.effect}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* IDEAL PALETTE GRID */}
+        <section className="py-14 px-6">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Tus colores ideales</span>
+              <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3">Una paleta hecha para ti</h2>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 md:gap-4">
+              {recommendedColors.slice(0, 10).map((color: any, i: number) => (
+                <div key={i} className="group text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
+                  <div
+                    className="aspect-square rounded-2xl shadow-soft mb-2 transition-all duration-500 group-hover:shadow-editorial group-hover:scale-[1.04] border border-border/30"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <p className="text-xs text-foreground font-medium leading-tight">{color.name}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{color.hex}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Avoid Colors */}
-        <section className="py-8 px-6">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center flex items-center justify-center gap-2">
-              <ShieldX className="w-5 h-5 text-destructive/60" />
-              Mejor Evitar
-            </h3>
-            <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
-              {avoidColors.slice(0, 3).map((color: any, i: number) => (
-                <div key={i} className="group text-center">
-                  <div className="aspect-square rounded-2xl shadow-soft mb-2 opacity-60 ring-1 ring-destructive/20" style={{ backgroundColor: color.hex }} />
-                  <p className="text-[10px] text-muted-foreground leading-tight">{color.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Clothing Suggestions */}
-        {clothingSuggestions.length > 0 && (
+        {/* WHY THESE COLORS */}
+        {whyColorsWork && (
           <section className="py-12 px-6">
-            <div className="max-w-2xl mx-auto">
-              <h3 className="font-display text-xl font-semibold text-foreground mb-2 text-center flex items-center justify-center gap-2">
-                <Shirt className="w-5 h-5 text-accent" />
-                Prendas Que Te Van Mejor
-              </h3>
-              <p className="text-muted-foreground text-xs text-center mb-6">Según tu paleta y estilo</p>
-              <div className="space-y-3">
-                {clothingSuggestions.slice(0, 5).map((s: any, i: number) => {
-                  const color = recommendedColors[i]?.name || recommendedColors[0]?.name || "";
-                  const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
-                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
+            <div className="max-w-2xl mx-auto p-8 md:p-10 rounded-3xl bg-gradient-card shadow-soft border border-border/40">
+              <div className="flex items-center gap-2 mb-4">
+                <Wand2 className="w-4 h-4 text-primary" />
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Por qué funcionan</span>
+              </div>
+              <p className="text-foreground/85 text-base leading-relaxed font-display italic">{whyColorsWork}</p>
+              {strengths.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {strengths.map((s, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-full bg-background/70 border border-border/50 text-xs text-foreground">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* AVOID */}
+        <section className="py-10 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-display text-2xl font-medium text-foreground mb-2 flex items-center justify-center gap-2">
+              <ShieldX className="w-5 h-5 text-destructive/60" />
+              Mejor evitar
+            </h3>
+            {whyAvoid && <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">{whyAvoid}</p>}
+            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
+              {avoidColors.slice(0, 3).map((color: any, i: number) => (
+                <div key={i} className="text-center">
+                  <div className="aspect-square rounded-2xl shadow-soft mb-2 opacity-70 ring-1 ring-destructive/30" style={{ backgroundColor: color.hex }} />
+                  <p className="text-[11px] text-muted-foreground leading-tight">{color.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* OUTFIT IDEAL */}
+        {outfit?.pieces?.length > 0 && (
+          <section className="py-16 px-6 bg-gradient-panel">
+            <div className="max-w-3xl mx-auto">
+              <div className="text-center mb-10">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Outfit ideal</span>
+                <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3">Tu look completo</h2>
+                {outfit.description && <p className="text-muted-foreground text-sm mt-4 max-w-lg mx-auto leading-relaxed">{outfit.description}</p>}
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {outfit.pieces.map((p: any, i: number) => {
+                  const url = p.searchUrl || buildSearchUrl(p.piece, p.color, "ropa");
+                  const altUrl = p.outfitUrl || buildSearchUrl(p.piece, p.color, "outfit");
                   return (
-                    <div
-                      key={i}
-                      className="p-4 rounded-xl bg-gradient-card shadow-soft animate-fade-in-up"
-                      style={{ animationDelay: `${i * 0.08}s` }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent mt-2 shrink-0" />
+                    <div key={i} className="p-5 rounded-2xl bg-background shadow-soft border border-border/40 animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-9 h-9 rounded-xl shrink-0 shadow-soft border border-border/40" style={{ backgroundColor: recommendedColors.find((c: any) => c.name?.toLowerCase() === p.color?.toLowerCase())?.hex || recommendedColors[i]?.hex || "hsl(var(--primary))" }} />
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{s.item}</p>
-                          <p className="text-xs text-muted-foreground">{s.reason}</p>
+                          <p className="text-sm font-medium text-foreground capitalize">{p.piece}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{p.color}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2 mt-3 pl-4">
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline">
+                      <div className="flex gap-3 text-[11px]">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                           Buscar prenda <ExternalLink className="w-3 h-3" />
                         </a>
-                        <span className="text-muted-foreground/40 text-[11px]">·</span>
-                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent hover:underline">
+                        <span className="text-muted-foreground/40">·</span>
+                        <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary hover:underline">
                           Ver outfits <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
@@ -293,16 +327,60 @@ const Results = () => {
           </section>
         )}
 
-        {/* Tips */}
-        {tips.length > 0 && (
-          <section className="py-10 px-6 bg-background">
+        {/* CLOTHING SUGGESTIONS */}
+        {clothingSuggestions.length > 0 && (
+          <section className="py-14 px-6">
             <div className="max-w-2xl mx-auto">
-              <h3 className="font-display text-lg font-semibold text-foreground mb-4 text-center">Tips Para Ti</h3>
-              <div className="space-y-2">
+              <div className="text-center mb-8">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium flex items-center justify-center gap-2">
+                  <Shirt className="w-3.5 h-3.5" /> Prendas para ti
+                </span>
+                <h2 className="font-display text-2xl md:text-3xl font-medium text-foreground mt-3">Lo que mejor te queda</h2>
+              </div>
+              <div className="space-y-3">
+                {clothingSuggestions.slice(0, 6).map((s: any, i: number) => {
+                  const color = recommendedColors[i]?.name || recommendedColors[0]?.name || "";
+                  const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
+                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
+                  return (
+                    <div key={i} className="p-5 rounded-2xl bg-gradient-card shadow-soft border border-border/40 animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
+                      <div className="flex items-start gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">{s.item}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{s.reason}</p>
+                          <div className="flex gap-3 mt-2.5 text-[11px]">
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                              Buscar prenda <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <span className="text-muted-foreground/40">·</span>
+                            <a href={altUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary hover:underline">
+                              Ver outfits <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* TIPS */}
+        {tips.length > 0 && (
+          <section className="py-14 px-6 bg-gradient-panel">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-8">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Consejos de estilismo</span>
+                <h2 className="font-display text-2xl md:text-3xl font-medium text-foreground mt-3">Tips para ti</h2>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
                 {tips.slice(0, 4).map((tip: string, i: number) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gradient-card shadow-soft">
-                    <span className="text-accent text-xs mt-0.5">💡</span>
-                    <p className="text-sm text-foreground">{tip}</p>
+                  <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-background shadow-soft border border-border/40 animate-fade-in-up" style={{ animationDelay: `${i * 0.08}s` }}>
+                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 font-medium">{i + 1}</span>
+                    <p className="text-sm text-foreground/90 leading-relaxed">{tip}</p>
                   </div>
                 ))}
               </div>
@@ -311,53 +389,35 @@ const Results = () => {
         )}
 
         {/* CTA */}
-        <section className="py-16 px-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-secondary/5" />
+        <section className="relative py-20 px-6 text-center overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-hero opacity-70" />
           <div className="relative z-10 max-w-md mx-auto">
-            <h3 className="font-display text-2xl font-semibold text-foreground mb-3">
-              Obtén Tu Reporte Completo
+            <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Reporte completo</span>
+            <h3 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3 mb-4">
+              Llévate tu análisis
             </h3>
             <p className="text-muted-foreground text-sm mb-8">
-              Te enviaremos tu análisis cromático, paleta y recomendaciones a tu correo.
+              Te enviamos tu paleta, recomendaciones y outfit por correo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button 
+              <button
                 onClick={handleSendEmail}
                 disabled={isSendingEmail || emailSent}
-                className={`inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-medium shadow-soft transition-all duration-300 hover:scale-105 ${
-                  emailSent 
-                    ? "bg-green-500 text-white cursor-default" 
-                    : "bg-gradient-button text-primary-foreground hover:shadow-medium"
+                className={`inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-medium shadow-soft transition-all duration-300 hover:scale-[1.03] ${
+                  emailSent ? "bg-secondary text-secondary-foreground cursor-default" : "bg-foreground text-background hover:shadow-editorial"
                 }`}
               >
-                {isSendingEmail ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : emailSent ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    Enviado con éxito
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4" />
-                    Enviar Mis Resultados
-                  </>
-                )}
+                {isSendingEmail ? (<><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>)
+                  : emailSent ? (<><CheckCircle2 className="w-4 h-4" /> Enviado</>)
+                  : (<><Mail className="w-4 h-4" /> Enviar mis resultados</>)}
               </button>
-              <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-accent transition-all duration-300">
+              <button className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border bg-background/60 text-foreground hover:bg-background hover:border-primary transition-all duration-300">
                 <Share2 className="w-4 h-4" />
                 Compartir
               </button>
             </div>
-            <button
-              onClick={() => navigate("/questionnaire")}
-              className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Repetir el análisis
-              <ArrowRight className="w-3 h-3" />
+            <button onClick={() => navigate("/questionnaire")} className="mt-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Repetir el análisis <ArrowRight className="w-3 h-3" />
             </button>
           </div>
         </section>
