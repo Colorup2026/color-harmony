@@ -371,16 +371,22 @@ const Results = () => {
               </div>
               <div className="space-y-3">
                 {clothingSuggestions.slice(0, 6).map((s: any, i: number) => {
-                  const color = recommendedColors[i]?.name || recommendedColors[0]?.name || "";
-                  const url = s.searchUrl || buildSearchUrl(s.item, color, "ropa");
-                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, color, "outfit");
+                  const colorName = s.color || recommendedColors[i]?.name || recommendedColors[0]?.name || "";
+                  const swatch = recommendedColors.find((c: any) => c.name?.toLowerCase() === colorName?.toLowerCase())?.hex || recommendedColors[i]?.hex;
+                  const url = s.searchUrl || buildSearchUrl(s.item, colorName, "ropa");
+                  const altUrl = s.outfitUrl || buildSearchUrl(s.item, colorName, "outfit");
                   return (
                     <div key={i} className="p-5 rounded-2xl bg-gradient-card shadow-soft border border-border/40 animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
                       <div className="flex items-start gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                        {swatch && <span className="w-9 h-9 rounded-xl shrink-0 shadow-soft border border-border/40" style={{ backgroundColor: swatch }} />}
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{s.item}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{s.reason}</p>
+                          <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-foreground capitalize">{s.item}</p>
+                            {colorName && <p className="text-[11px] text-muted-foreground capitalize">{colorName}</p>}
+                          </div>
+                          {s.reason && <p className="text-xs text-muted-foreground mt-1">{s.reason}</p>}
+                          {s.combine && <p className="text-xs text-foreground/75 mt-1.5"><span className="text-[10px] uppercase tracking-wider text-primary mr-1">Combina:</span>{s.combine}</p>}
+                          {s.occasion && <p className="text-[11px] text-muted-foreground/80 mt-1 italic">Ocasión: {s.occasion}</p>}
                           <div className="flex gap-3 mt-2.5 text-[11px]">
                             <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                               Buscar prenda <ExternalLink className="w-3 h-3" />
