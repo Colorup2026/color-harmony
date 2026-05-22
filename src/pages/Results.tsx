@@ -130,8 +130,10 @@ const Results = () => {
   const tips = aiData?.personalizedTips?.length ? aiData.personalizedTips : result.tips;
   const paletteHighlight = aiData?.paletteHighlight;
   const whyColorsWork = aiData?.whyColorsWork;
+  const usageTip = aiData?.usageTip;
   const strengths: string[] = aiData?.strengths || [];
   const whyAvoid = aiData?.whyAvoid;
+  const contrast = aiData?.chromaticProfile?.contrast || (formData as any).contrast || "medio";
 
   const handleSendEmail = async () => {
     if (isSendingEmail || emailSent) return;
