@@ -82,6 +82,19 @@ const Results = () => {
     );
   }
 
+  const loadingSteps = [
+    "Analizando tus rasgos…",
+    "Identificando tu subtono…",
+    "Construyendo tu paleta…",
+    "Preparando tus recomendaciones…",
+  ];
+  const [loadingStep, setLoadingStep] = useState(0);
+  useEffect(() => {
+    if (!isAnalyzing) return;
+    const id = setInterval(() => setLoadingStep((s) => (s + 1) % loadingSteps.length), 1600);
+    return () => clearInterval(id);
+  }, [isAnalyzing]);
+
   if (isAnalyzing || !result) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
@@ -96,12 +109,12 @@ const Results = () => {
           <h2 className="font-display text-3xl font-medium text-foreground mb-3">
             Analizando tu <span className="italic text-gradient-editorial">esencia</span>
           </h2>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
-            Nuestra IA está leyendo tu rostro, tu luz y tus rasgos para construir una paleta hecha solo para ti.
+          <p key={loadingStep} className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed animate-fade-in-up">
+            {loadingSteps[loadingStep]}
           </p>
           <div className="flex justify-center gap-1.5 mt-8">
-            {[0, 1, 2].map(i => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-soft" style={{ animationDelay: `${i * 0.3}s` }} />
+            {loadingSteps.map((_, i) => (
+              <div key={i} className={`h-1 rounded-full transition-all duration-500 ${i <= loadingStep ? "w-8 bg-primary" : "w-4 bg-border"}`} />
             ))}
           </div>
         </div>
