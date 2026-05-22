@@ -201,10 +201,10 @@ const Results = () => {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Temperatura", value: result.profile.temperature },
-                { label: "Intensidad", value: result.profile.intensity },
+                { label: "Subtono", value: result.profile.temperature },
                 { label: "Profundidad", value: result.profile.depth },
-                { label: "Estación", value: result.profile.season },
+                { label: "Contraste", value: contrast },
+                { label: "Intensidad", value: result.profile.intensity },
               ].map((item) => (
                 <div key={item.label} className="p-5 rounded-2xl bg-gradient-card shadow-soft text-center border border-border/40">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">{item.label}</p>
@@ -215,47 +215,43 @@ const Results = () => {
           </div>
         </section>
 
-        {/* PALETTE HIGHLIGHT */}
-        {paletteHighlight?.highlights?.length > 0 && (
+        {/* PALETTE IDENTIFIED */}
+        {paletteHighlight && (
           <section className="py-14 px-6">
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-10">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Paleta identificada</span>
-                <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3">
-                  {paletteHighlight.name || result.profile.season}
-                </h2>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {paletteHighlight.highlights.slice(0, 6).map((h: any, i: number) => (
-                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl glass-card animate-fade-in-up" style={{ animationDelay: `${i * 0.07}s` }}>
-                    <div className="w-12 h-12 rounded-xl shadow-soft shrink-0" style={{ backgroundColor: recommendedColors[i]?.hex || "hsl(var(--primary))" }} />
-                    <div>
-                      <p className="font-display text-base text-foreground">{h.color}</p>
-                      <p className="text-xs text-muted-foreground">{h.effect}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="max-w-2xl mx-auto text-center">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">✨ Paleta identificada</span>
+              <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3 mb-5">
+                {paletteHighlight.name || result.profile.season}
+              </h2>
+              {paletteHighlight.description && (
+                <p className="text-muted-foreground text-base leading-relaxed max-w-xl mx-auto">
+                  {paletteHighlight.description}
+                </p>
+              )}
             </div>
           </section>
         )}
 
-        {/* IDEAL PALETTE GRID */}
+        {/* IDEAL PALETTE — rich cards with personalized why */}
         <section className="py-14 px-6">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
               <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Tus colores ideales</span>
               <h2 className="font-display text-3xl md:text-4xl font-medium text-foreground mt-3">Una paleta hecha para ti</h2>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 md:gap-4">
-              {recommendedColors.slice(0, 10).map((color: any, i: number) => (
-                <div key={i} className="group text-center animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
-                  <div
-                    className="aspect-square rounded-2xl shadow-soft mb-2 transition-all duration-500 group-hover:shadow-editorial group-hover:scale-[1.04] border border-border/30"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                  <p className="text-xs text-foreground font-medium leading-tight">{color.name}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{color.hex}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {recommendedColors.slice(0, 12).map((color: any, i: number) => (
+                <div
+                  key={i}
+                  className="group rounded-2xl bg-background shadow-soft border border-border/40 overflow-hidden hover:shadow-editorial transition-all duration-500 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.04}s` }}
+                >
+                  <div className="h-16 w-full transition-transform duration-500 group-hover:scale-[1.02]" style={{ backgroundColor: color.hex }} />
+                  <div className="p-3.5">
+                    <p className="text-sm font-medium text-foreground leading-tight">{color.name}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">{color.hex}</p>
+                    {color.why && <p className="text-xs text-muted-foreground leading-relaxed">{color.why}</p>}
+                  </div>
                 </div>
               ))}
             </div>
@@ -268,7 +264,7 @@ const Results = () => {
             <div className="max-w-2xl mx-auto p-8 md:p-10 rounded-3xl bg-gradient-card shadow-soft border border-border/40">
               <div className="flex items-center gap-2 mb-4">
                 <Wand2 className="w-4 h-4 text-primary" />
-                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Por qué funcionan</span>
+                <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Por qué funcionan tus colores</span>
               </div>
               <p className="text-foreground/85 text-base leading-relaxed font-display italic">{whyColorsWork}</p>
               {strengths.length > 0 && (
@@ -284,24 +280,45 @@ const Results = () => {
           </section>
         )}
 
-        {/* AVOID */}
-        <section className="py-10 px-6">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-display text-2xl font-medium text-foreground mb-2 flex items-center justify-center gap-2">
-              <ShieldX className="w-5 h-5 text-destructive/60" />
-              Mejor evitar
-            </h3>
-            {whyAvoid && <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">{whyAvoid}</p>}
-            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
-              {avoidColors.slice(0, 3).map((color: any, i: number) => (
-                <div key={i} className="text-center">
-                  <div className="aspect-square rounded-2xl shadow-soft mb-2 opacity-70 ring-1 ring-destructive/30" style={{ backgroundColor: color.hex }} />
-                  <p className="text-[11px] text-muted-foreground leading-tight">{color.name}</p>
+        {/* USAGE TIP */}
+        {usageTip && (
+          <section className="py-8 px-6">
+            <div className="max-w-2xl mx-auto p-6 md:p-8 rounded-3xl glass-card text-center">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-primary font-medium">Consejo de uso</span>
+              <p className="text-foreground/85 text-sm md:text-base leading-relaxed mt-3">{usageTip}</p>
+            </div>
+          </section>
+        )}
+
+        {/* COLORS TO WATCH */}
+        <section className="py-14 px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h3 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-2 flex items-center justify-center gap-2">
+                <ShieldX className="w-5 h-5 text-destructive/60" />
+                Colores a vigilar
+              </h3>
+              {whyAvoid && <p className="text-sm text-muted-foreground max-w-lg mx-auto">{whyAvoid}</p>}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {avoidColors.slice(0, 6).map((color: any, i: number) => (
+                <div key={i} className="flex gap-3 p-4 rounded-2xl bg-background shadow-soft border border-border/40 animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
+                  <div className="w-14 h-14 rounded-xl shrink-0 opacity-80 ring-1 ring-destructive/20" style={{ backgroundColor: color.hex }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-sm font-medium text-foreground">{color.name}</p>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{color.hex}</span>
+                    </div>
+                    {color.why && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{color.why}</p>}
+                    {color.advice && <p className="text-xs text-foreground/70 mt-1.5 leading-relaxed italic">💡 {color.advice}</p>}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
+
+
 
         {/* OUTFIT IDEAL */}
         {outfit?.pieces?.length > 0 && (
