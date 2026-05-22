@@ -141,23 +141,22 @@ RESPONDE ÚNICAMENTE con JSON válido. Formato exacto:
     "temperature": "cálido" | "frío" | "neutro",
     "intensity": "suave" | "brillante",
     "depth": "claro" | "medio" | "profundo",
+    "contrast": "bajo" | "medio" | "alto",
     "season": "string (ej: 'Primavera Cálida', 'Invierno Frío')",
     "seasonKey": "warm-soft" | "warm-intense" | "cool-soft" | "cool-intense" | "neutral-soft" | "neutral-intense"
   },
-  "profile": "string — 1-2 líneas claras y personalizadas",
+  "profile": "string — 2-3 líneas humanas y personalizadas (presencia visual, rasgos, tipo cromático)",
   "paletteHighlight": {
     "name": "string — nombre de la paleta en mayúsculas (ej: 'PRIMAVERA CÁLIDA')",
-    "description": "string — 1-2 líneas conectando piel, ojos, pelo y contraste con la paleta",
-    "highlights": [
-      {"color": "string (ej: 'Verde oliva')", "effect": "string (ej: 'resalta tu tono natural')"}
-    ]
+    "description": "string — 3-4 líneas conectando piel, ojos, pelo y contraste con la paleta"
   },
-  "recommendedColors": [{"name": "string", "hex": "string"}],
-  "whyColorsWork": "string — explicación conectando con piel, ojos, pelo y contraste del usuario. Natural, no técnico.",
+  "recommendedColors": [{"name": "string", "hex": "string", "why": "string — 1 línea: por qué favorece a ESTE usuario concreto"}],
+  "whyColorsWork": "string — 3-4 líneas sin tecnicismos. Conecta con piel, ojos, pelo y contraste.",
+  "usageTip": "string — 2-3 líneas: qué usar cerca del rostro, qué reservar para abajo, cómo combinar dentro de la paleta.",
   "strengths": ["string — 2-3 puntos fuertes"],
-  "avoidColors": [{"name": "string", "hex": "string"}],
-  "whyAvoid": "string — explicación breve y clara",
-  "clothingSuggestions": [{"item": "string", "reason": "string", "searchUrl": "string", "outfitUrl": "string"}],
+  "avoidColors": [{"name": "string", "hex": "string", "why": "string — por qué no armoniza con ESTE perfil", "advice": "string — cómo usarlo si lo quiere igualmente"}],
+  "whyAvoid": "string — explicación breve. No decir 'evitar completamente', sino 'vigilar' o 'usar con moderación'.",
+  "clothingSuggestions": [{"item": "string", "color": "string", "reason": "string", "combine": "string — cómo combinarla", "occasion": "string", "searchUrl": "string", "outfitUrl": "string"}],
   "outfit": {
     "description": "string — descripción corta del look completo",
     "pieces": [{"piece": "string", "color": "string", "searchUrl": "string", "outfitUrl": "string"}]
@@ -168,14 +167,12 @@ RESPONDE ÚNICAMENTE con JSON válido. Formato exacto:
 REGLAS:
 - Género: ${genderLabel}. Si es unisex, usar prendas neutras.
 - Estilos: ${stylesText}. Las prendas DEBEN coincidir con estos estilos.
-- 5-6 colores recomendados, 2-3 a evitar (todos con nombre real y hex).
-- 4-5 prendas con razón breve, searchUrl Y outfitUrl.
-- paletteHighlight: 3-5 colores destacados con su efecto en la persona.
+- recommendedColors: **MÍNIMO 10, MÁXIMO 12** colores. Cada uno con name, hex y why personalizado y específico.
+- avoidColors: **MÍNIMO 5, MÁXIMO 6** colores. Cada uno con name, hex, why y advice.
+- 5-6 clothingSuggestions con reason, combine, occasion, searchUrl Y outfitUrl.
 - Outfit completo: parte superior, parte inferior, capa extra (si aplica), calzado. Cada pieza con searchUrl Y outfitUrl.
 - whyColorsWork DEBE mencionar piel, ojos, pelo y contraste.
-- Máximo ~140 palabras totales en textos.
-- Tono: moderno, directo, premium. Sin lenguaje técnico.
-- Debe parecer una recomendación real de un estilista profesional.`;
+- Tono moderno, directo, premium. Sin lenguaje técnico. Como estilista profesional real.`;
 
     const userPrompt = `Analiza esta persona y genera su perfil cromático completo.
 
