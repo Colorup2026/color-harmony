@@ -2,78 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
   :root {
-    /* COLOR UP — Editorial cream & terracotta palette */
-    --background: 48 40% 97%;              /* Blanco crema #FCFBF4 */
-    --foreground: 24 18% 16%;              /* Warm ink */
+    /* Chronéa — Minimal editorial monochrome palette */
+    --background: 44 32% 96%;              /* Ivory cream */
+    --foreground: 25 14% 14%;              /* Warm near-black ink */
 
-    --card: 50 55% 94%;                    /* Crema clásico */
-    --card-foreground: 24 18% 16%;
+    --card: 44 32% 96%;
+    --card-foreground: 25 14% 14%;
 
-    --popover: 48 40% 97%;
-    --popover-foreground: 24 18% 16%;
+    --popover: 44 32% 96%;
+    --popover-foreground: 25 14% 14%;
 
-    --primary: 17 62% 55%;                 /* Terracota suave #D87040 */
-    --primary-foreground: 48 50% 98%;
+    --primary: 25 14% 14%;                 /* Ink (primary actions = neutral) */
+    --primary-foreground: 44 32% 96%;
 
-    --secondary: 92 18% 61%;               /* Verde salvia #9CAF88 */
-    --secondary-foreground: 24 18% 16%;
+    --secondary: 30 14% 90%;               /* Soft stone */
+    --secondary-foreground: 25 14% 14%;
 
-    --muted: 35 22% 90%;                   /* Arena clara */
-    --muted-foreground: 24 10% 40%;
+    --muted: 33 18% 91%;                   /* Warm sand */
+    --muted-foreground: 25 8% 42%;
 
-    --accent: 354 42% 84%;                 /* Rosa empolvado #E8C5C8 */
-    --accent-foreground: 24 18% 16%;
+    --accent: 18 38% 52%;                  /* Single accent: muted terracotta */
+    --accent-foreground: 44 32% 96%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 0 50% 48%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 35 18% 86%;                  /* Greige */
-    --input: 35 18% 86%;
-    --ring: 17 62% 55%;
+    --border: 30 14% 85%;
+    --input: 30 14% 85%;
+    --ring: 25 14% 14%;
 
-    --radius: 1.25rem;
+    --radius: 0.5rem;
 
-    /* Editorial brand tokens */
-    --brand-cream: 50 55% 94%;
-    --brand-vanilla: 45 70% 81%;
-    --brand-sage: 92 18% 61%;
-    --brand-terracotta: 17 62% 55%;
-    --brand-blush: 354 42% 84%;
-    --brand-sand: 32 30% 75%;
-    --brand-greige: 130 7% 72%;
-    --brand-ink: 24 18% 16%;
+    /* Brand tokens — restrained */
+    --brand-cream: 44 32% 96%;
+    --brand-ivory: 40 28% 93%;
+    --brand-stone: 30 14% 90%;
+    --brand-sand: 32 18% 84%;
+    --brand-greige: 28 10% 72%;
+    --brand-ink: 25 14% 14%;
+    --brand-accent: 18 38% 52%;
 
-    /* Gradients — warm, editorial, fashion-tech */
-    --gradient-hero: radial-gradient(120% 80% at 20% 0%, hsl(354 42% 92% / 0.6) 0%, transparent 50%),
-                     radial-gradient(100% 80% at 100% 20%, hsl(92 18% 80% / 0.5) 0%, transparent 55%),
-                     linear-gradient(180deg, hsl(48 40% 97%) 0%, hsl(35 30% 93%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(50 55% 96%), hsl(35 25% 92%));
-    --gradient-button: linear-gradient(135deg, hsl(17 62% 55%) 0%, hsl(14 70% 48%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(17 62% 55%), hsl(354 42% 70%), hsl(92 18% 55%));
-    --gradient-rainbow: linear-gradient(135deg, hsl(17 62% 55%), hsl(354 42% 78%), hsl(45 70% 75%), hsl(92 18% 60%));
-    --gradient-panel: linear-gradient(180deg, hsl(50 55% 96% / 0.7), hsl(35 25% 92% / 0.5));
+    /* Subtle monochrome gradients */
+    --gradient-hero: linear-gradient(180deg, hsl(44 32% 96%) 0%, hsl(40 28% 93%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(44 32% 97%), hsl(40 28% 94%));
+    --gradient-button: linear-gradient(180deg, hsl(25 14% 18%), hsl(25 14% 12%));
+    --gradient-accent: linear-gradient(135deg, hsl(25 14% 14%), hsl(18 38% 52%));
+    --gradient-panel: linear-gradient(180deg, hsl(44 32% 97% / 0.7), hsl(40 28% 93% / 0.5));
 
-    /* Soft, warm shadows */
-    --shadow-soft: 0 4px 24px -8px hsl(24 30% 25% / 0.08);
-    --shadow-medium: 0 12px 40px -12px hsl(24 30% 25% / 0.14);
-    --shadow-glow: 0 0 60px hsl(17 62% 55% / 0.18);
-    --shadow-editorial: 0 30px 80px -30px hsl(24 30% 20% / 0.25);
+    /* Quiet shadows */
+    --shadow-soft: 0 2px 16px -8px hsl(25 14% 14% / 0.08);
+    --shadow-medium: 0 8px 32px -12px hsl(25 14% 14% / 0.12);
+    --shadow-glow: 0 0 48px hsl(25 14% 14% / 0.10);
+    --shadow-editorial: 0 24px 64px -28px hsl(25 14% 14% / 0.22);
 
-    --font-display: 'Playfair Display', Georgia, serif;
+    --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
     --font-body: 'Inter', system-ui, sans-serif;
 
-    --sidebar-background: 48 40% 97%;
-    --sidebar-foreground: 24 18% 26%;
-    --sidebar-primary: 24 18% 16%;
-    --sidebar-primary-foreground: 48 50% 98%;
-    --sidebar-accent: 35 22% 92%;
-    --sidebar-accent-foreground: 24 18% 16%;
-    --sidebar-border: 35 18% 86%;
-    --sidebar-ring: 17 62% 55%;
+    --sidebar-background: 44 32% 96%;
+    --sidebar-foreground: 25 14% 22%;
+    --sidebar-primary: 25 14% 14%;
+    --sidebar-primary-foreground: 44 32% 96%;
+    --sidebar-accent: 33 18% 91%;
+    --sidebar-accent-foreground: 25 14% 14%;
+    --sidebar-border: 30 14% 85%;
+    --sidebar-ring: 25 14% 14%;
   }
 }
 
@@ -82,13 +78,15 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    font-weight: 300;
+    letter-spacing: 0.005em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "ss01", "cv11";
   }
-  h1, h2, h3 {
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    font-weight: 300;
+    letter-spacing: -0.005em;
   }
 }
 
