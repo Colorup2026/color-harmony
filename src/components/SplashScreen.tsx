@@ -6,8 +6,8 @@ const SplashScreen = ({ onDone }: { onDone?: () => void }) => {
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    const leaveTimer = setTimeout(() => setLeaving(true), 2200);
-    const doneTimer = setTimeout(() => onDone?.(), 2900);
+    const leaveTimer = setTimeout(() => setLeaving(true), 2700);
+    const doneTimer = setTimeout(() => onDone?.(), 3400);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(doneTimer);
@@ -43,7 +43,7 @@ const SplashScreen = ({ onDone }: { onDone?: () => void }) => {
             <span
               key={i}
               className="splash-letter font-display text-foreground text-4xl sm:text-6xl tracking-[0.35em] font-light"
-              style={{ animationDelay: `${1100 + i * 90}ms` }}
+              style={{ animationDelay: `${1500 + i * 110}ms` }}
             >
               {letter}
             </span>
@@ -53,23 +53,25 @@ const SplashScreen = ({ onDone }: { onDone?: () => void }) => {
 
       <style>{`
         @keyframes splash-drop {
-          0%   { transform: translateY(-120%) rotate(-25deg); opacity: 0; }
-          55%  { transform: translateY(8%) rotate(8deg); opacity: 1; }
-          75%  { transform: translateY(-3%) rotate(-3deg); }
-          100% { transform: translateY(0) rotate(0); opacity: 1; }
+          0%   { transform: translateY(-130%) rotate(0deg) scale(0.6); opacity: 0; }
+          25%  { opacity: 1; }
+          70%  { transform: translateY(6%) rotate(320deg) scale(1.05); opacity: 1; }
+          85%  { transform: translateY(-2%) rotate(355deg) scale(0.98); }
+          100% { transform: translateY(0) rotate(360deg) scale(1); opacity: 1; }
         }
-        @keyframes splash-letter-in {
-          0%   { opacity: 0; transform: translateY(8px); filter: blur(6px); }
-          100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        @keyframes splash-letter-spit {
+          0%   { opacity: 0; transform: translateX(-14px) translateY(2px) scale(0.85); filter: blur(8px); }
+          60%  { opacity: 1; transform: translateX(2px) translateY(0) scale(1.02); filter: blur(0); }
+          100% { opacity: 1; transform: translateX(0) translateY(0) scale(1); filter: blur(0); }
         }
         .splash-crescent {
-          transform-origin: 70% 12%;
-          animation: splash-drop 1.1s cubic-bezier(.34,1.2,.5,1) both;
+          transform-origin: 50% 50%;
+          animation: splash-drop 1.4s cubic-bezier(.34,1.15,.5,1) both;
         }
         .splash-letter {
           display: inline-block;
           opacity: 0;
-          animation: splash-letter-in .5s ease-out forwards;
+          animation: splash-letter-spit .55s cubic-bezier(.2,.8,.3,1) forwards;
         }
       `}</style>
     </div>
