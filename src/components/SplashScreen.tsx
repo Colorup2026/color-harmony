@@ -6,8 +6,8 @@ const SplashScreen = ({ onDone }: { onDone?: () => void }) => {
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    const leaveTimer = setTimeout(() => setLeaving(true), 2200);
-    const doneTimer = setTimeout(() => onDone?.(), 2900);
+    const leaveTimer = setTimeout(() => setLeaving(true), 2700);
+    const doneTimer = setTimeout(() => onDone?.(), 3400);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(doneTimer);
